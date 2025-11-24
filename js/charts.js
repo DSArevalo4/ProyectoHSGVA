@@ -2,25 +2,40 @@
 // CHARTS.JS - Gráficos del Dashboard
 // ========================================
 
-let dashboardData = null;
+let humedadData = null;
+let atterbergData = null;
+let clasificacionData = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    loadDashboardData();
+    loadAllDashboardData();
 });
 
-// Cargar datos reales desde el backend
-async function loadDashboardData() {
+// Cargar datos de todos los módulos
+async function loadAllDashboardData() {
     try {
-        const response = await fetch('/api/humedad/datos');
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-            dashboardData = result.data;
-            initializeCharts();
-        } else {
-            console.warn('No se pudieron cargar los datos, usando datos de ejemplo');
-            initializeCharts();
+        // Cargar datos de humedad
+        const humedadResponse = await fetch('/api/humedad/datos');
+        const humedadResult = await humedadResponse.json();
+        if (humedadResult.success) {
+            humedadData = humedadResult.data;
         }
+
+        // Cargar datos de Atterberg
+        const atterbergResponse = await fetch('/api/atterberg/datos');
+        const atterbergResult = await atterbergResponse.json();
+        if (atterbergResult.success) {
+            atterbergData = atterbergResult.data;
+        }
+
+        // Cargar datos de clasificación
+        const clasificacionResponse = await fetch('/api/clasificacion/datos');
+        const clasificacionResult = await clasificacionResponse.json();
+        if (clasificacionResult.success) {
+            clasificacionData = clasificacionResult.data;
+        }
+
+        // Inicializar gráficos
+        initializeCharts();
     } catch (error) {
         console.error('Error cargando datos del dashboard:', error);
         initializeCharts();
@@ -28,227 +43,35 @@ async function loadDashboardData() {
 }
 
 function initializeCharts() {
-    initWaterfallChart();
-    initBarChart();
-    initLineChart();
-    initGaugeChart();
-    initTreemapChart();
-    initPieChart();
+    initHumedadEvolutionChart();
+    initAtterbergChart();
+    initClasificacionChart();
+    initResumenGaugeChart();
+    initComparativaChart();
+    initDistribucionChart();
 }
 
 // ========================================
-// GRÁFICO DE CASCADA (Plotly)
+// 1. EVOLUCIÓN DE HUMEDAD vs TEMPERATURA
 // ========================================
 
-function initWaterfallChart() {
-    let measure, x, y, title;
+function initHumedadEvolutionChart() {
+    const canvas = document.getElementById('waterfallChart');
+    if (!canvas) return;
     
-    // Si hay datos reales del Excel, mostrar variación de humedad
-    if (dashboardData && dashboardData.length > 0) {
-        // Tomar cada 3 muestras para simplificar el waterfall
-        const indices = [0, 3, 6, 9, 12];
-        const muestras = indices.map(i => dashboardData[i]).filter(d => d);
-        
-        // Calcular variaciones relativas
-        const inicial = muestras[0].humedad;
-        measure = ['absolute'];
-        x = [`Inicial (${muestras[0].t_min}min)`];
-        y = [inicial];
-        
-        for (let i = 1; i < muestras.length; i++) {
-            const variacion = muestras[i].humedad - muestras[i-1].humedad;
-            measure.push('relative');
-            x.push(`${muestras[i].t_min}min`);
-            y.push(variacion);
-        }
-        
-        measure.push('total');
-        x.push('Final');
-        y.push(0);
-        
-        title = 'Variación de Humedad (%)';
-    } else {
-        measure = ['relative', 'relative', 'relative', 'relative', 'total'];
-        x = ['Gasto A', 'Gasto B', 'Presupuesto', 'Gasto C', 'Total'];
-        y = [400, -200, 300, -150, 0];
-        title = '';
-    }
-
-    const data = [{
-        type: 'waterfall',
-        orientation: 'v',
-        measure: measure,
-        x: x,
-        textposition: 'outside',
-        y: y,
-        connector: {
-            line: {
-                color: 'rgb(63, 63, 63)'
-            }
-        },
-        decreasing: { marker: { color: '#ef4444' }},
-        increasing: { marker: { color: '#4a7c59' }},
-        totals: { marker: { color: '#6ba083' }}
-    }];
-
-    const layout = {
-        title: {
-            text: title,
-            font: { family: 'Segoe UI, sans-serif' }
-        },
-        xaxis: {
-            title: dashboardData ? 'Tiempo (min)' : 'Categorías',
-            gridcolor: '#e2e8f0'
-        },
-        yaxis: {
-            title: dashboardData ? 'Humedad (%)' : 'Monto (€)',
-            gridcolor: '#e2e8f0'
-        },
-        paper_bgcolor: 'white',
-        plot_bgcolor: 'white',
-        font: {
-            family: 'Segoe UI, sans-serif',
-            color: '#1e293b'
-        },
-        margin: { t: 40, b: 60, l: 60, r: 20 }
-    };
-
-    const config = {
-        responsive: true,
-        displayModeBar: false
-    };
-
-    Plotly.newPlot('waterfallChart', data, layout, config);
-}
-
-// ========================================
-// GRÁFICO DE BARRAS (Chart.js)
-// ========================================
-
-function initBarChart() {
-    const ctx = document.getElementById('barChart');
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let labels, values, colors;
+    let labels, humedadValues, temperaturaValues;
     
-    // Si hay datos reales del Excel, usarlos
-    if (dashboardData && dashboardData.length > 0) {
-        // Tomar las primeras 5 muestras para el gráfico de barras
-        const muestras = dashboardData.slice(0, 5);
-        labels = muestras.map((d, i) => `Lectura ${i + 1}`);
-        values = muestras.map(d => d.humedad);
-        
-        // Colores degradados
-        colors = [
-            'rgba(74, 124, 89, 0.9)',
-            'rgba(107, 160, 131, 0.8)',
-            'rgba(168, 213, 186, 0.7)',
-            'rgba(107, 160, 131, 0.6)',
-            'rgba(74, 124, 89, 0.5)'
-        ];
+    if (humedadData && humedadData.length > 0) {
+        labels = humedadData.map(d => `${d.t_min} min`);
+        humedadValues = humedadData.map(d => d.humedad);
+        temperaturaValues = humedadData.map(d => d.temperatura);
     } else {
-        // Datos de ejemplo
-        labels = ['Humedad', 'Límites', 'Clasificación', 'Granulometría', 'Fases'];
-        values = [15, 12, 10, 8, 7];
-        colors = [
-            'rgba(74, 124, 89, 0.8)',
-            'rgba(107, 160, 131, 0.8)',
-            'rgba(168, 213, 186, 0.8)',
-            'rgba(74, 124, 89, 0.6)',
-            'rgba(107, 160, 131, 0.6)'
-        ];
-    }
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: dashboardData ? 'Humedad (%)' : 'Ensayos Realizados',
-                data: values,
-                backgroundColor: colors,
-                borderColor: colors.map(c => c.replace('0.', '1.')),
-                borderWidth: 2,
-                borderRadius: 8
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(30, 41, 59, 0.9)',
-                    padding: 12,
-                    titleFont: {
-                        size: 14,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        size: 13
-                    },
-                    borderColor: '#4a7c59',
-                    borderWidth: 1,
-                    callbacks: {
-                        label: function(context) {
-                            return dashboardData ? `Humedad: ${context.parsed.y.toFixed(2)}%` : context.formattedValue;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: '#e2e8f0',
-                        drawBorder: false
-                    },
-                    ticks: {
-                        font: {
-                            size: 11
-                        },
-                        color: '#64748b',
-                        callback: function(value) {
-                            return dashboardData ? value.toFixed(1) + '%' : value;
-                        }
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        font: {
-                            size: 11
-                        },
-                        color: '#64748b'
-                    }
-                }
-            }
-        }
-    });
-}
-
-// ========================================
-// GRÁFICO DE LÍNEAS (Chart.js)
-// ========================================
-
-function initLineChart() {
-    const ctx = document.getElementById('lineChart');
-    if (!ctx) return;
-
-    let labels, humedadValues;
-    
-    // Si hay datos reales del Excel, usarlos
-    if (dashboardData && dashboardData.length > 0) {
-        labels = dashboardData.map(d => `${d.t_min} min`);
-        humedadValues = dashboardData.map(d => d.humedad);
-    } else {
-        // Datos de ejemplo
-        labels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-        humedadValues = [65, 70, 75, 72, 80, 85, 90, 88, 92, 95, 98, 100];
+        labels = ['M1', 'M2', 'M3', 'M4', 'M5'];
+        humedadValues = [15, 16, 14, 17, 15.5];
+        temperaturaValues = [20, 21, 19, 22, 20.5];
     }
 
     new Chart(ctx, {
@@ -259,70 +82,71 @@ function initLineChart() {
                 {
                     label: 'Contenido de Humedad (%)',
                     data: humedadValues,
-                    borderColor: '#4a7c59',
-                    backgroundColor: 'rgba(74, 124, 89, 0.1)',
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     tension: 0.4,
                     fill: true,
-                    pointBackgroundColor: '#4a7c59',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
+                    yAxisID: 'y',
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                },
+                {
+                    label: 'Temperatura (°C)',
+                    data: temperaturaValues,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    tension: 0.4,
+                    fill: false,
+                    yAxisID: 'y1',
+                    pointRadius: 5,
+                    pointHoverRadius: 7
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
             plugins: {
-                legend: {
+                title: {
                     display: true,
-                    position: 'top',
-                    labels: {
-                        usePointStyle: true,
-                        padding: 15,
-                        font: {
-                            size: 12
-                        }
+                    text: 'Evolución del Contenido de Humedad en el Tiempo',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
                     }
                 },
-                tooltip: {
-                    backgroundColor: 'rgba(30, 41, 59, 0.9)',
-                    padding: 12,
-                    titleFont: {
-                        size: 14,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        size: 13
-                    },
-                    borderColor: '#4a7c59',
-                    borderWidth: 1
+                legend: {
+                    display: true,
+                    position: 'top'
                 }
             },
             scales: {
                 y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: '#e2e8f0',
-                        drawBorder: false
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Humedad (%)'
                     },
-                    ticks: {
-                        font: {
-                            size: 11
-                        },
-                        color: '#64748b'
+                    grid: {
+                        color: '#e2e8f0'
                     }
                 },
-                x: {
-                    grid: {
-                        display: false
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Temperatura (°C)'
                     },
-                    ticks: {
-                        font: {
-                            size: 11
-                        },
-                        color: '#64748b'
+                    grid: {
+                        drawOnChartArea: false
                     }
                 }
             }
@@ -331,179 +155,126 @@ function initLineChart() {
 }
 
 // ========================================
-// GRÁFICO GAUGE (Plotly)
+// 2. LÍMITES DE ATTERBERG
 // ========================================
 
-function initGaugeChart() {
-    let value, title, range, steps, threshold;
+function initAtterbergChart() {
+    const canvas = document.getElementById('barChart');
+    if (!canvas) return;
     
-    // Si hay datos reales del Excel, calcular promedio de humedad
-    if (dashboardData && dashboardData.length > 0) {
-        const sumaHumedad = dashboardData.reduce((sum, d) => sum + d.humedad, 0);
-        value = sumaHumedad / dashboardData.length;
-        title = 'Humedad Promedio (%)';
-        range = [0, 25];
-        steps = [
-            { range: [0, 12], color: '#fee2e2' },   // Muy seco
-            { range: [12, 15], color: '#fef3c7' },  // Seco
-            { range: [15, 18], color: '#d1fae5' },  // Normal
-            { range: [18, 25], color: '#dbeafe' }   // Húmedo
-        ];
-        threshold = 20;
-    } else {
-        value = 87.5;
-        title = 'Eficiencia (%)';
-        range = [0, 100];
-        steps = [
-            { range: [0, 40], color: '#fee2e2' },
-            { range: [40, 70], color: '#fef3c7' },
-            { range: [70, 100], color: '#d1fae5' }
-        ];
-        threshold = 90;
-    }
-
-    const data = [{
-        type: 'indicator',
-        mode: 'gauge+number+delta',
-        value: value,
-        title: { 
-            text: title,
-            font: { size: 16, family: 'Segoe UI, sans-serif' }
-        },
-        delta: { 
-            reference: dashboardData ? 15 : 80, 
-            increasing: { color: '#4a7c59' },
-            decreasing: { color: dashboardData ? '#ef4444' : '#94a3b8' }
-        },
-        gauge: {
-            axis: { 
-                range: [null, range[1]], 
-                tickwidth: 1, 
-                tickcolor: '#1e293b' 
-            },
-            bar: { color: '#4a7c59' },
-            bgcolor: 'white',
-            borderwidth: 2,
-            bordercolor: '#e2e8f0',
-            steps: steps,
-            threshold: {
-                line: { color: '#ef4444', width: 4 },
-                thickness: 0.75,
-                value: threshold
-            }
-        }
-    }];
-
-    const layout = {
-        paper_bgcolor: 'white',
-        font: { 
-            color: '#1e293b',
-            family: 'Segoe UI, sans-serif'
-        },
-        margin: { t: 40, b: 20, l: 20, r: 20 }
-    };
-
-    const config = {
-        responsive: true,
-        displayModeBar: false
-    };
-
-    Plotly.newPlot('gaugeChart', data, layout, config);
-}
-
-// ========================================
-// TREEMAP (Plotly)
-// ========================================
-
-function initTreemapChart() {
-    let labels, parents, values, colors;
-    
-    // Si hay datos reales del Excel, categorizar por rangos de humedad
-    if (dashboardData && dashboardData.length > 0) {
-        // Categorizar muestras por rangos de humedad
-        const muySeco = dashboardData.filter(d => d.humedad < 14).length;
-        const seco = dashboardData.filter(d => d.humedad >= 14 && d.humedad < 16).length;
-        const normal = dashboardData.filter(d => d.humedad >= 16 && d.humedad < 18).length;
-        const humedo = dashboardData.filter(d => d.humedad >= 18).length;
-        
-        const total = muySeco + seco + normal + humedo;
-        
-        labels = ['Total Muestras', 'Muy Seco (<14%)', 'Seco (14-16%)', 'Normal (16-18%)', 'Húmedo (≥18%)'];
-        parents = ['', 'Total Muestras', 'Total Muestras', 'Total Muestras', 'Total Muestras'];
-        values = [total, muySeco, seco, normal, humedo];
-        colors = ['#4a7c59', '#fee2e2', '#fef3c7', '#d1fae5', '#dbeafe'];
-    } else {
-        labels = ['Total', 'Estrategia', 'Cáritas', 'Ripao', 'Sigma', 'Universidades'];
-        parents = ['', 'Total', 'Total', 'Total', 'Total', 'Total'];
-        values = [100, 35, 25, 20, 15, 5];
-        colors = ['#4a7c59', '#6ba083', '#a8d5ba', '#d4af37', '#8b9556', '#556b2f'];
-    }
-
-    const data = [{
-        type: 'treemap',
-        labels: labels,
-        parents: parents,
-        values: values,
-        textinfo: 'label+value+percent parent',
-        marker: {
-            colors: colors,
-            line: { color: 'white', width: 2 }
-        },
-        hovertemplate: dashboardData 
-            ? '<b>%{label}</b><br>Muestras: %{value}<br>Porcentaje: %{percentParent}<extra></extra>'
-            : '<b>%{label}</b><br>Valor: %{value}<br>Porcentaje: %{percentParent}<extra></extra>'
-    }];
-
-    const layout = {
-        paper_bgcolor: 'white',
-        font: {
-            family: 'Segoe UI, sans-serif',
-            size: 13,
-            color: dashboardData ? '#1e293b' : 'white'
-        },
-        margin: { t: 10, b: 10, l: 10, r: 10 }
-    };
-
-    const config = {
-        responsive: true,
-        displayModeBar: false
-    };
-
-    Plotly.newPlot('treemapChart', data, layout, config);
-}
-
-// ========================================
-// GRÁFICO DE PIE (Chart.js)
-// ========================================
-
-function initPieChart() {
-    const ctx = document.getElementById('pieChart');
+    const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let labels, data, colors;
+    let ll, lp, ip;
     
-    // Si hay datos reales del Excel, mostrar distribución por rangos
-    if (dashboardData && dashboardData.length > 0) {
-        const muySeco = dashboardData.filter(d => d.humedad < 14).length;
-        const seco = dashboardData.filter(d => d.humedad >= 14 && d.humedad < 16).length;
-        const normal = dashboardData.filter(d => d.humedad >= 16 && d.humedad < 18).length;
-        const humedo = dashboardData.filter(d => d.humedad >= 18).length;
+    if (atterbergData) {
+        ll = atterbergData.ll || 0;
+        lp = atterbergData.lp || 0;
+        ip = atterbergData.ip || 0;
+    } else {
+        ll = 50;
+        lp = 30;
+        ip = 20;
+    }
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Límite Líquido (LL)', 'Límite Plástico (LP)', 'Índice de Plasticidad (IP)'],
+            datasets: [{
+                label: 'Límites de Atterberg (%)',
+                data: [ll, lp, ip],
+                backgroundColor: [
+                    'rgba(102, 126, 234, 0.8)',
+                    'rgba(245, 87, 108, 0.8)',
+                    'rgba(16, 185, 129, 0.8)'
+                ],
+                borderColor: [
+                    '#667eea',
+                    '#f5576c',
+                    '#10b981'
+                ],
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Límites de Atterberg',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    }
+                },
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toFixed(2) + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Porcentaje (%)'
+                    },
+                    grid: {
+                        color: '#e2e8f0'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ========================================
+// 3. CLASIFICACIÓN DE SUELOS
+// ========================================
+
+function initClasificacionChart() {
+    const canvas = document.getElementById('lineChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let labels = [];
+    let data = [];
+    let colors = [];
+    
+    if (clasificacionData && clasificacionData.analisis_granulometrico) {
+        const clasificaciones = {};
+        clasificacionData.analisis_granulometrico.forEach(analisis => {
+            if (analisis.clasificacion) {
+                clasificaciones[analisis.clasificacion] = (clasificaciones[analisis.clasificacion] || 0) + 1;
+            }
+        });
         
-        labels = ['Muy Seco (<14%)', 'Seco (14-16%)', 'Normal (16-18%)', 'Húmedo (≥18%)'];
-        data = [muySeco, seco, normal, humedo];
+        labels = Object.keys(clasificaciones);
+        data = Object.values(clasificaciones);
         colors = [
-            'rgba(254, 226, 226, 0.8)',  // Muy seco - rojo claro
-            'rgba(254, 243, 199, 0.8)',  // Seco - amarillo
-            'rgba(209, 250, 229, 0.8)',  // Normal - verde claro
-            'rgba(219, 234, 254, 0.8)'   // Húmedo - azul claro
+            'rgba(102, 126, 234, 0.8)',
+            'rgba(245, 87, 108, 0.8)',
+            'rgba(16, 185, 129, 0.8)',
+            'rgba(245, 158, 11, 0.8)'
         ];
     } else {
-        labels = ['Completados', 'En Proceso', 'Pendientes'];
-        data = [8, 3, 1];
+        labels = ['A-1-a', 'A-1-b', 'A-2-4'];
+        data = [2, 1, 1];
         colors = [
-            'rgba(74, 124, 89, 0.8)',
-            'rgba(212, 175, 55, 0.8)',
-            'rgba(148, 163, 184, 0.8)'
+            'rgba(102, 126, 234, 0.8)',
+            'rgba(245, 87, 108, 0.8)',
+            'rgba(16, 185, 129, 0.8)'
         ];
     }
 
@@ -522,42 +293,260 @@ function initPieChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        padding: 15,
-                        usePointStyle: true,
-                        font: {
-                            size: 11
-                        }
+                title: {
+                    display: true,
+                    text: 'Distribución de Clasificación AASHTO',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
                     }
                 },
+                legend: {
+                    display: true,
+                    position: 'bottom'
+                },
                 tooltip: {
-                    backgroundColor: 'rgba(30, 41, 59, 0.9)',
-                    padding: 12,
-                    titleFont: {
-                        size: 14,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        size: 13
-                    },
-                    borderColor: '#4a7c59',
-                    borderWidth: 1,
                     callbacks: {
                         label: function(context) {
                             const label = context.label || '';
                             const value = context.parsed || 0;
                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
                             const percentage = ((value / total) * 100).toFixed(1);
-                            return dashboardData 
-                                ? `${label}: ${value} muestras (${percentage}%)`
-                                : `${label}: ${value}`;
+                            return `${label}: ${value} muestra(s) (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ========================================
+// 4. RESUMEN GAUGE (Plotly.js)
+// ========================================
+
+function initResumenGaugeChart() {
+    const gaugeDiv = document.getElementById('gaugeChart');
+    if (!gaugeDiv) return;
+
+    let value = 0;
+    let title = 'Humedad Promedio';
+    
+    if (humedadData && humedadData.length > 0) {
+        const suma = humedadData.reduce((acc, d) => acc + d.humedad, 0);
+        value = suma / humedadData.length;
+    } else {
+        value = 15.5;
+    }
+
+    const data = [{
+        type: "indicator",
+        mode: "gauge+number+delta",
+        value: value,
+        title: { 
+            text: title + ' (%)',
+            font: { size: 16, family: 'Segoe UI, sans-serif' }
+        },
+        delta: { 
+            reference: 15, 
+            increasing: { color: "#10b981" },
+            decreasing: { color: "#ef4444" }
+        },
+        gauge: {
+            axis: { 
+                range: [0, 25],
+                tickwidth: 1,
+                tickcolor: "#1e293b"
+            },
+            bar: { color: "#3b82f6" },
+            bgcolor: "white",
+            borderwidth: 2,
+            bordercolor: "#e2e8f0",
+            steps: [
+                { range: [0, 10], color: '#fee2e2' },
+                { range: [10, 15], color: '#fef3c7' },
+                { range: [15, 20], color: '#d1fae5' },
+                { range: [20, 25], color: '#dbeafe' }
+            ],
+            threshold: {
+                line: { color: "#ef4444", width: 4 },
+                thickness: 0.75,
+                value: 20
+            }
+        }
+    }];
+
+    const layout = {
+        paper_bgcolor: 'white',
+        font: { 
+            color: '#1e293b',
+            family: 'Segoe UI, sans-serif'
+        },
+        margin: { t: 40, b: 20, l: 20, r: 20 }
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: false
+    };
+
+    Plotly.newPlot(gaugeDiv, data, layout, config);
+}
+
+// ========================================
+// 5. COMPARATIVA DE MUESTRAS - TreeMap (Plotly.js)
+// ========================================
+
+function initComparativaChart() {
+    const treeDiv = document.getElementById('treemapChart');
+    if (!treeDiv) return;
+
+    let labels, parents, values, colors;
+    
+    if (clasificacionData && clasificacionData.muestras) {
+        const muestras = clasificacionData.muestras;
+        labels = ['Total'];
+        parents = [''];
+        values = [muestras.reduce((sum, m) => sum + m.total_muestra, 0)];
+        colors = ['#4a7c59'];
+        
+        muestras.forEach(m => {
+            labels.push(`Muestra ${m.numero}`);
+            parents.push('Total');
+            values.push(m.total_muestra);
+            colors.push(['#667eea', '#f5576c', '#10b981', '#f59e0b'][m.numero - 1] || '#64748b');
+        });
+    } else {
+        labels = ['Total', 'M1', 'M2', 'M3', 'M4'];
+        parents = ['', 'Total', 'Total', 'Total', 'Total'];
+        values = [4500, 1200, 950, 1100, 1250];
+        colors = ['#4a7c59', '#667eea', '#f5576c', '#10b981', '#f59e0b'];
+    }
+
+    const data = [{
+        type: 'treemap',
+        labels: labels,
+        parents: parents,
+        values: values,
+        textinfo: 'label+value+percent parent',
+        marker: {
+            colors: colors,
+            line: { color: 'white', width: 2 }
+        },
+        hovertemplate: '<b>%{label}</b><br>Peso: %{value}g<br>Porcentaje: %{percentParent}<extra></extra>'
+    }];
+
+    const layout = {
+        title: {
+            text: 'Distribución de Peso Total por Muestra',
+            font: { size: 16, family: 'Segoe UI, sans-serif' }
+        },
+        paper_bgcolor: 'white',
+        font: {
+            family: 'Segoe UI, sans-serif',
+            size: 13,
+            color: '#1e293b'
+        },
+        margin: { t: 40, b: 10, l: 10, r: 10 }
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: false
+    };
+
+    Plotly.newPlot(treeDiv, data, layout, config);
+}
+
+// ========================================
+// 6. DISTRIBUCIÓN DE % PASA
+// ========================================
+
+function initDistribucionChart() {
+    const canvas = document.getElementById('pieChart');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let labels, data, colors;
+    
+    if (clasificacionData && clasificacionData.analisis_granulometrico) {
+        const tamiz10 = clasificacionData.analisis_granulometrico.filter(a => a.n_tamiz === 10);
+        
+        labels = tamiz10.map(a => `Muestra ${a.muestra}`);
+        data = tamiz10.map(a => a.pct_pasa);
+        colors = [
+            'rgba(102, 126, 234, 0.8)',
+            'rgba(245, 87, 108, 0.8)',
+            'rgba(16, 185, 129, 0.8)',
+            'rgba(245, 158, 11, 0.8)'
+        ];
+    } else {
+        labels = ['Muestra 1', 'Muestra 2', 'Muestra 3', 'Muestra 4'];
+        data = [100, 18, 14, 24];
+        colors = [
+            'rgba(102, 126, 234, 0.8)',
+            'rgba(245, 87, 108, 0.8)',
+            'rgba(16, 185, 129, 0.8)',
+            'rgba(245, 158, 11, 0.8)'
+        ];
+    }
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '% Que Pasa Tamiz #10',
+                data: data,
+                backgroundColor: colors,
+                borderColor: colors.map(c => c.replace('0.8', '1')),
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Porcentaje que Pasa Tamiz #10 por Muestra',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    }
+                },
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toFixed(2) + '%';
                         }
                     }
                 }
             },
-            cutout: '60%'
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: '% Que Pasa'
+                    },
+                    grid: {
+                        color: '#e2e8f0'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
         }
     });
 }
