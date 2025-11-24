@@ -16,6 +16,7 @@ scipy==1.11.4
 # Generación de reportes
 fpdf2==2.7.6
 python-docx==1.1.0
+reportlab==4.0.7
 
 # Utilidades
 python-dateutil==2.8.2

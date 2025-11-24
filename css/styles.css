@@ -731,3 +731,223 @@ body {
         gap: var(--spacing-md);
     }
 }
+
+/* ========================================
+   MÓDULO DE INFORMES
+   ======================================== */
+
+/* Form inputs */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.form-input {
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    transition: all var(--transition-fast);
+    background: var(--bg-white);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.1);
+}
+
+.form-input::placeholder {
+    color: #94a3b8;
+}
+
+/* Checkbox personalizado para ensayos */
+.ensayo-checkbox {
+    position: relative;
+}
+
+.checkbox-container {
+    display: block;
+    position: relative;
+    padding: 16px 16px 16px 50px;
+    cursor: pointer;
+    background: var(--bg-white);
+    border: 2px solid #e2e8f0;
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-base);
+}
+
+.checkbox-container:hover {
+    border-color: var(--primary-green);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-2px);
+}
+
+.checkbox-container input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.checkmark {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 22px;
+    width: 22px;
+    background-color: #f1f5f9;
+    border: 2px solid #cbd5e1;
+    border-radius: 5px;
+    transition: all var(--transition-fast);
+}
+
+.checkbox-container:hover .checkmark {
+    background-color: #e2e8f0;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 7px;
+    top: 3px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.checkbox-content {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.checkbox-content strong {
+    color: var(--text-primary);
+    display: block;
+    font-size: 15px;
+}
+
+/* Cards de formato */
+.formato-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background: var(--bg-white);
+    border: 2px solid #e2e8f0;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    position: relative;
+}
+
+.formato-card:hover {
+    border-color: var(--primary-green);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+}
+
+.formato-card.selected {
+    border-color: var(--primary-green);
+    background: linear-gradient(135deg, rgba(74, 124, 89, 0.05) 0%, rgba(168, 213, 186, 0.05) 100%);
+    box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.1);
+}
+
+.formato-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.formato-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    transition: all var(--transition-base);
+}
+
+.formato-icon i {
+    font-size: 30px;
+    color: white;
+}
+
+.formato-card:hover .formato-icon {
+    transform: scale(1.1);
+}
+
+.formato-info {
+    text-align: center;
+}
+
+.formato-info strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.formato-info p {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 0;
+}
+
+/* Botones secundarios */
+.btn-secondary {
+    padding: 10px 20px;
+    background: var(--bg-white);
+    color: var(--text-primary);
+    border: 2px solid #e2e8f0;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-secondary:hover {
+    background: #f8fafc;
+    border-color: var(--primary-green);
+    color: var(--primary-green);
+}
+
+.btn-secondary:active {
+    transform: translateY(1px);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary:disabled:hover,
+.btn-secondary:disabled:hover {
+    transform: none;
+}

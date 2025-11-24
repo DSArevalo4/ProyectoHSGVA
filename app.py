@@ -7,6 +7,12 @@ from flask import Flask, render_template, jsonify, request, send_file
 from datetime import datetime
 import os
 import sys
+import io
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill
 
 # Agregar el directorio actual al path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -283,6 +289,378 @@ def get_proyectos():
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/informe/generar', methods=['POST'])
+def generar_informe():
+    """Generar informe en el formato solicitado"""
+    try:
+        data = request.get_json()
+        
+        # Extraer configuración
+        config = {
+            'titulo': data.get('titulo', 'Informe Geotecnico'),
+            'cliente': data.get('cliente', ''),
+            'proyecto': data.get('proyecto', ''),
+            'ubicacion': data.get('ubicacion', ''),
+            'fecha': data.get('fecha', datetime.now().strftime('%Y-%m-%d')),
+            'incluirHumedad': data.get('incluirHumedad', False),
+            'incluirAtterberg': data.get('incluirAtterberg', False),
+            'incluirClasificacion': data.get('incluirClasificacion', False),
+            'incluirFases': data.get('incluirFases', False),
+            'incluirGraficos': data.get('incluirGraficos', False),
+            'formato': data.get('formato', 'pdf')
+        }
+        
+        # Generar según formato
+        if config['formato'] == 'pdf':
+            return generar_pdf(config)
+        elif config['formato'] == 'excel':
+            return generar_excel(config)
+        elif config['formato'] == 'word':
+            return generar_word(config)
+        else:
+            return jsonify({'success': False, 'error': 'Formato no soportado'}), 400
+            
+    except Exception as e:
+        print(f"Error generando informe: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def generar_pdf(config):
+    """Generar informe en formato PDF"""
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    
+    # Encabezado
+    c.setFont("Helvetica-Bold", 20)
+    c.drawString(1*inch, height - 1*inch, "INFORME GEOTECNICO")
+    
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(1*inch, height - 1.5*inch, config['titulo'])
+    
+    # Información del proyecto
+    y = height - 2*inch
+    c.setFont("Helvetica", 11)
+    
+    if config['cliente']:
+        c.drawString(1*inch, y, f"Cliente: {config['cliente']}")
+        y -= 0.3*inch
+    
+    if config['proyecto']:
+        c.drawString(1*inch, y, f"Proyecto: {config['proyecto']}")
+        y -= 0.3*inch
+    
+    if config['ubicacion']:
+        c.drawString(1*inch, y, f"Ubicacion: {config['ubicacion']}")
+        y -= 0.3*inch
+    
+    c.drawString(1*inch, y, f"Fecha: {config['fecha']}")
+    y -= 0.5*inch
+    
+    # Ensayos incluidos
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(1*inch, y, "ENSAYOS INCLUIDOS:")
+    y -= 0.3*inch
+    
+    c.setFont("Helvetica", 10)
+    ensayos = []
+    
+    if config['incluirHumedad']:
+        ensayos.append("- Contenido de Humedad")
+        
+    if config['incluirAtterberg']:
+        ensayos.append("- Limites de Atterberg")
+        
+    if config['incluirClasificacion']:
+        ensayos.append("- Clasificacion de Suelos (AASHTO)")
+        
+    if config['incluirFases']:
+        ensayos.append("- Fases del Suelo")
+    
+    for ensayo in ensayos:
+        c.drawString(1.2*inch, y, ensayo)
+        y -= 0.25*inch
+    
+    # Datos de ensayos
+    if config['incluirHumedad']:
+        y = agregar_datos_humedad_pdf(c, y)
+    
+    if config['incluirAtterberg']:
+        y = agregar_datos_atterberg_pdf(c, y)
+    
+    if config['incluirClasificacion']:
+        y = agregar_datos_clasificacion_pdf(c, y)
+    
+    # Pie de página
+    c.setFont("Helvetica-Italic", 8)
+    c.drawString(1*inch, 0.5*inch, f"Generado por Sistema HSGVA - {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    
+    c.save()
+    buffer.seek(0)
+    
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"informe_{config['fecha']}.pdf",
+        mimetype='application/pdf'
+    )
+
+
+def generar_excel(config):
+    """Generar informe en formato Excel"""
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Informe Geotecnico"
+    
+    # Estilos
+    header_fill = PatternFill(start_color="4A7C59", end_color="4A7C59", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=14)
+    title_font = Font(bold=True, size=16)
+    
+    # Título
+    ws.merge_cells('A1:E1')
+    ws['A1'] = "INFORME GEOTECNICO"
+    ws['A1'].font = title_font
+    ws['A1'].alignment = Alignment(horizontal='center')
+    
+    # Información del proyecto
+    row = 3
+    ws[f'A{row}'] = "Titulo:"
+    ws[f'B{row}'] = config['titulo']
+    ws[f'A{row}'].font = Font(bold=True)
+    
+    row += 1
+    if config['cliente']:
+        ws[f'A{row}'] = "Cliente:"
+        ws[f'B{row}'] = config['cliente']
+        ws[f'A{row}'].font = Font(bold=True)
+        row += 1
+    
+    if config['proyecto']:
+        ws[f'A{row}'] = "Proyecto:"
+        ws[f'B{row}'] = config['proyecto']
+        ws[f'A{row}'].font = Font(bold=True)
+        row += 1
+    
+    if config['ubicacion']:
+        ws[f'A{row}'] = "Ubicacion:"
+        ws[f'B{row}'] = config['ubicacion']
+        ws[f'A{row}'].font = Font(bold=True)
+        row += 1
+    
+    ws[f'A{row}'] = "Fecha:"
+    ws[f'B{row}'] = config['fecha']
+    ws[f'A{row}'].font = Font(bold=True)
+    
+    row += 2
+    
+    # Datos de ensayos
+    if config['incluirHumedad']:
+        row = agregar_datos_humedad_excel(ws, row)
+    
+    if config['incluirAtterberg']:
+        row = agregar_datos_atterberg_excel(ws, row)
+    
+    if config['incluirClasificacion']:
+        row = agregar_datos_clasificacion_excel(ws, row)
+    
+    # Ajustar ancho de columnas
+    ws.column_dimensions['A'].width = 20
+    ws.column_dimensions['B'].width = 20
+    ws.column_dimensions['C'].width = 15
+    ws.column_dimensions['D'].width = 15
+    ws.column_dimensions['E'].width = 15
+    
+    # Guardar en buffer
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"informe_{config['fecha']}.xlsx",
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+
+
+def generar_word(config):
+    """Generar informe en formato Word (simplificado como TXT por ahora)"""
+    contenido = f"""
+INFORME GEOTECNICO
+{'='*60}
+
+{config['titulo']}
+
+INFORMACION DEL PROYECTO
+{'='*60}
+Cliente: {config['cliente']}
+Proyecto: {config['proyecto']}
+Ubicacion: {config['ubicacion']}
+Fecha: {config['fecha']}
+
+ENSAYOS INCLUIDOS
+{'='*60}
+"""
+    
+    if config['incluirHumedad']:
+        contenido += "\n- Contenido de Humedad"
+    if config['incluirAtterberg']:
+        contenido += "\n- Limites de Atterberg"
+    if config['incluirClasificacion']:
+        contenido += "\n- Clasificacion de Suelos (AASHTO)"
+    if config['incluirFases']:
+        contenido += "\n- Fases del Suelo"
+    
+    contenido += f"\n\n{'='*60}\nGenerado por Sistema HSGVA - {datetime.now().strftime('%d/%m/%Y %H:%M')}\n"
+    
+    buffer = io.BytesIO()
+    buffer.write(contenido.encode('utf-8'))
+    buffer.seek(0)
+    
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"informe_{config['fecha']}.txt",
+        mimetype='text/plain'
+    )
+
+
+def agregar_datos_humedad_pdf(c, y):
+    """Agregar datos de humedad al PDF"""
+    try:
+        datos = hidrometria_etl.load_data()
+        if y < 2*inch:
+            c.showPage()
+            y = 10*inch
+        
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(1*inch, y, "CONTENIDO DE HUMEDAD")
+        y -= 0.3*inch
+        
+        c.setFont("Helvetica", 9)
+        c.drawString(1*inch, y, f"Total de muestras: {len(datos)}")
+        y -= 0.25*inch
+        
+        if len(datos) > 0:
+            promedio = sum(d.get('Humedad (%)', 0) for d in datos) / len(datos)
+            c.drawString(1*inch, y, f"Humedad promedio: {promedio:.2f}%")
+            y -= 0.4*inch
+    except Exception as e:
+        print(f"Error agregando humedad: {e}")
+    
+    return y
+
+
+def agregar_datos_atterberg_pdf(c, y):
+    """Agregar datos de Atterberg al PDF"""
+    try:
+        datos = atterberg_etl.load_data()
+        if y < 2*inch:
+            c.showPage()
+            y = 10*inch
+        
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(1*inch, y, "LIMITES DE ATTERBERG")
+        y -= 0.3*inch
+        
+        c.setFont("Helvetica", 9)
+        c.drawString(1*inch, y, f"Total de ensayos: {len(datos)}")
+        y -= 0.4*inch
+    except Exception as e:
+        print(f"Error agregando Atterberg: {e}")
+    
+    return y
+
+
+def agregar_datos_clasificacion_pdf(c, y):
+    """Agregar datos de clasificación al PDF"""
+    try:
+        datos = clasificacion_etl.load_data()
+        if y < 2*inch:
+            c.showPage()
+            y = 10*inch
+        
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(1*inch, y, "CLASIFICACION DE SUELOS (AASHTO)")
+        y -= 0.3*inch
+        
+        c.setFont("Helvetica", 9)
+        c.drawString(1*inch, y, f"Total de muestras: {len(datos)}")
+        y -= 0.4*inch
+    except Exception as e:
+        print(f"Error agregando clasificacion: {e}")
+    
+    return y
+
+
+def agregar_datos_humedad_excel(ws, row):
+    """Agregar datos de humedad al Excel"""
+    try:
+        datos = hidrometria_etl.load_data()
+        
+        ws[f'A{row}'] = "CONTENIDO DE HUMEDAD"
+        ws[f'A{row}'].font = Font(bold=True, size=12)
+        row += 1
+        
+        # Encabezados
+        ws[f'A{row}'] = "Muestra"
+        ws[f'B{row}'] = "Humedad (%)"
+        ws[f'C{row}'] = "Temperatura"
+        for cell in [ws[f'A{row}'], ws[f'B{row}'], ws[f'C{row}']]:
+            cell.font = Font(bold=True)
+            cell.fill = PatternFill(start_color="4A7C59", end_color="4A7C59", fill_type="solid")
+            cell.font = Font(bold=True, color="FFFFFF")
+        row += 1
+        
+        # Datos
+        for i, dato in enumerate(datos[:10], 1):
+            ws[f'A{row}'] = f"M-{i}"
+            ws[f'B{row}'] = dato.get('Humedad (%)', 0)
+            ws[f'C{row}'] = dato.get('Temperatura', '')
+            row += 1
+        
+        row += 1
+    except Exception as e:
+        print(f"Error agregando humedad a Excel: {e}")
+    
+    return row
+
+
+def agregar_datos_atterberg_excel(ws, row):
+    """Agregar datos de Atterberg al Excel"""
+    try:
+        datos = atterberg_etl.load_data()
+        
+        ws[f'A{row}'] = "LIMITES DE ATTERBERG"
+        ws[f'A{row}'].font = Font(bold=True, size=12)
+        row += 1
+        
+        ws[f'A{row}'] = f"Total de ensayos: {len(datos)}"
+        row += 2
+    except Exception as e:
+        print(f"Error agregando Atterberg a Excel: {e}")
+    
+    return row
+
+
+def agregar_datos_clasificacion_excel(ws, row):
+    """Agregar datos de clasificación al Excel"""
+    try:
+        datos = clasificacion_etl.load_data()
+        
+        ws[f'A{row}'] = "CLASIFICACION DE SUELOS (AASHTO)"
+        ws[f'A{row}'].font = Font(bold=True, size=12)
+        row += 1
+        
+        ws[f'A{row}'] = f"Total de muestras: {len(datos)}"
+        row += 2
+    except Exception as e:
+        print(f"Error agregando clasificacion a Excel: {e}")
+    
+    return row
 
 
 # Manejo de errores
