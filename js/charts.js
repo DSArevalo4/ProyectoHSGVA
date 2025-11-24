@@ -2,9 +2,9 @@
 // CHARTS.JS - Gráficos del Dashboard
 // ========================================
 
-let humedadData = null;
-let atterbergData = null;
-let clasificacionData = null;
+let dashboardHumedadData = null;
+let dashboardAtterbergData = null;
+let dashboardClasificacionData = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     loadAllDashboardData();
@@ -17,21 +17,21 @@ async function loadAllDashboardData() {
         const humedadResponse = await fetch('/api/humedad/datos');
         const humedadResult = await humedadResponse.json();
         if (humedadResult.success) {
-            humedadData = humedadResult.data;
+            dashboardHumedadData = humedadResult.data;
         }
 
         // Cargar datos de Atterberg
         const atterbergResponse = await fetch('/api/atterberg/datos');
         const atterbergResult = await atterbergResponse.json();
         if (atterbergResult.success) {
-            atterbergData = atterbergResult.data;
+            dashboardAtterbergData = atterbergResult.data;
         }
 
         // Cargar datos de clasificación
         const clasificacionResponse = await fetch('/api/clasificacion/datos');
         const clasificacionResult = await clasificacionResponse.json();
         if (clasificacionResult.success) {
-            clasificacionData = clasificacionResult.data;
+            dashboardClasificacionData = clasificacionResult.data;
         }
 
         // Inicializar gráficos
@@ -64,10 +64,10 @@ function initHumedadEvolutionChart() {
 
     let labels, humedadValues, temperaturaValues;
     
-    if (humedadData && humedadData.length > 0) {
-        labels = humedadData.map(d => `${d.t_min} min`);
-        humedadValues = humedadData.map(d => d.humedad);
-        temperaturaValues = humedadData.map(d => d.temperatura);
+    if (dashboardHumedadData && dashboardHumedadData.length > 0) {
+        labels = dashboardHumedadData.map(d => `${d.t_min} min`);
+        humedadValues = dashboardHumedadData.map(d => d.humedad);
+        temperaturaValues = dashboardHumedadData.map(d => d.temperatura);
     } else {
         labels = ['M1', 'M2', 'M3', 'M4', 'M5'];
         humedadValues = [15, 16, 14, 17, 15.5];
@@ -167,10 +167,10 @@ function initAtterbergChart() {
 
     let ll, lp, ip;
     
-    if (atterbergData) {
-        ll = atterbergData.ll || 0;
-        lp = atterbergData.lp || 0;
-        ip = atterbergData.ip || 0;
+    if (dashboardAtterbergData) {
+        ll = dashboardAtterbergData.ll || 0;
+        lp = dashboardAtterbergData.lp || 0;
+        ip = dashboardAtterbergData.ip || 0;
     } else {
         ll = 50;
         lp = 30;
@@ -252,9 +252,9 @@ function initClasificacionChart() {
     let data = [];
     let colors = [];
     
-    if (clasificacionData && clasificacionData.analisis_granulometrico) {
+    if (dashboardClasificacionData && dashboardClasificacionData.analisis_granulometrico) {
         const clasificaciones = {};
-        clasificacionData.analisis_granulometrico.forEach(analisis => {
+        dashboardClasificacionData.analisis_granulometrico.forEach(analisis => {
             if (analisis.clasificacion) {
                 clasificaciones[analisis.clasificacion] = (clasificaciones[analisis.clasificacion] || 0) + 1;
             }
@@ -332,9 +332,9 @@ function initResumenGaugeChart() {
     let value = 0;
     let title = 'Humedad Promedio';
     
-    if (humedadData && humedadData.length > 0) {
-        const suma = humedadData.reduce((acc, d) => acc + d.humedad, 0);
-        value = suma / humedadData.length;
+    if (dashboardHumedadData && dashboardHumedadData.length > 0) {
+        const suma = dashboardHumedadData.reduce((acc, d) => acc + d.humedad, 0);
+        value = suma / dashboardHumedadData.length;
     } else {
         value = 15.5;
     }
@@ -403,8 +403,8 @@ function initComparativaChart() {
 
     let labels, parents, values, colors;
     
-    if (clasificacionData && clasificacionData.muestras) {
-        const muestras = clasificacionData.muestras;
+    if (dashboardClasificacionData && dashboardClasificacionData.muestras) {
+        const muestras = dashboardClasificacionData.muestras;
         labels = ['Total'];
         parents = [''];
         values = [muestras.reduce((sum, m) => sum + m.total_muestra, 0)];
@@ -471,8 +471,8 @@ function initDistribucionChart() {
 
     let labels, data, colors;
     
-    if (clasificacionData && clasificacionData.analisis_granulometrico) {
-        const tamiz10 = clasificacionData.analisis_granulometrico.filter(a => a.n_tamiz === 10);
+    if (dashboardClasificacionData && dashboardClasificacionData.analisis_granulometrico) {
+        const tamiz10 = dashboardClasificacionData.analisis_granulometrico.filter(a => a.n_tamiz === 10);
         
         labels = tamiz10.map(a => `Muestra ${a.muestra}`);
         data = tamiz10.map(a => a.pct_pasa);
