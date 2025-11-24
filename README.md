@@ -1,306 +1,302 @@
-# 🏗️ Sistema de Análisis Geotécnico - HSGVA
 
-## 📋 Descripción del Proyecto
+# 🏗️ Sistema de Análisis Geotécnico - HSGVA Lab
 
-Aplicación web profesional para la automatización del procesamiento, análisis y presentación de resultados de ensayos de laboratorio de suelos. Desarrollada con **Python Flask** (backend) y **HTML/CSS/JavaScript** (frontend), siguiendo una estética moderna y profesional inspirada en dashboards de Power BI.
+## 📋 Descripción
 
-### 🔧 Tecnologías Utilizadas
+Sistema web profesional para el procesamiento, análisis y generación de informes de ensayos de laboratorio de suelos. Incluye análisis de contenido de humedad, límites de Atterberg, clasificación de suelos (AASHTO) y fases del suelo.
 
-**Backend:**
-- Python 3.x
-- Flask (servidor web)
-- Pandas (procesamiento de datos)
-- OpenPyXL (lectura de Excel)
-- NumPy (cálculos científicos)
+### ✨ Características Principales
 
-**Frontend:**
-- HTML5
-- CSS3
-- JavaScript (Vanilla)
-- Chart.js (gráficos)
-- Plotly.js (visualizaciones avanzadas)
+- 📊 **Dashboard interactivo** con estadísticas en tiempo real
+- 💧 **Contenido de Humedad** - Análisis completo con gráficos
+- � **Límites de Atterberg** - LL, LP, IP y Carta de Plasticidad
+- 🏗️ **Clasificación de Suelos** - Sistema AASHTO
+- ⚖️ **Fases del Suelo** - Relaciones volumétricas y gravimétricas
+- 📄 **Generador de Informes** - Exporta a PDF, Excel y Word con gráficos
+- 🎯 **Tour Guiado** - Ayuda contextual en cada módulo
 
-## 🎯 Ensayos Incluidos
+---
 
-1. **💧 Contenido de Humedad** ✅ (Implementado)
-2. **📊 Límites de Atterberg** (LL, LP, IP) - En desarrollo
-3. **🔍 Clasificación de Suelos** (SUCS y AASHTO) - En desarrollo
-4. **⚖️ Fases Gravimétricas y Volumétricas** - En desarrollo
+## 🚀 Inicio Rápido
 
-## ✨ Características Principales
+### Requisitos
 
-### Funcionalidades Implementadas:
-- ✅ Dashboard interactivo con métricas y gráficos en tiempo real
-- ✅ Módulo completo de Contenido de Humedad con:
-  - Ingreso de datos de laboratorio
-  - Cálculos automáticos validados
-  - Visualización de resultados detallados
-  - Historial de muestras
-  - Exportación de datos a CSV
-  - Validación de rangos y errores
-- ✅ Interfaz responsive y profesional
-- ✅ Navegación modular por ensayos
-- ✅ Sistema de notificaciones y mensajes
-- ✅ Fecha y hora en tiempo real
+- **Python 3.8 o superior** instalado en tu computadora
+- Navegador web moderno (Chrome, Firefox, Edge)
 
-### Características de Diseño:
-- 🎨 Paleta de colores verde profesional
-- 📱 Diseño responsive (escritorio, tablet, móvil)
-- 🎯 Tarjetas KPI con animaciones
-- 📊 Múltiples tipos de gráficos (barras, líneas, gauge, treemap, pie)
-- 🌊 Efectos visuales y transiciones suaves
-- 📈 Visualización clara de datos y resultados
+### Instalación (Paso a Paso)
 
-## 🚀 Instalación y Uso
+#### ⭐ **Opción 1: Inicio Automático (RECOMENDADO)**
 
-### Requisitos Previos
+1. **Extrae el archivo ZIP** en una carpeta de tu preferencia
 
-- Python 3.8 o superior
-- pip (gestor de paquetes de Python)
+2. **Abre la carpeta** del proyecto
 
-### Instalación
+3. **Ejecuta el script de inicio:**
 
-#### Opción 1: Inicio Automático (Windows) ⭐ RECOMENDADO
+   **En Windows con PowerShell:**
+   - Haz clic derecho en `start.ps1`
+   - Selecciona "Ejecutar con PowerShell"
+   - O abre PowerShell en la carpeta y ejecuta:
+     ```powershell
+     .\start.ps1
+     ```
 
-**PowerShell:**
-```powershell
-.\start.ps1
-```
+   **En Windows con CMD:**
+   - Doble clic en `start.bat`
+   - O abre CMD en la carpeta y ejecuta:
+     ```cmd
+     start.bat
+     ```
 
-**CMD:**
-```cmd
-start.bat
-```
+4. **¡Listo!** El navegador se abrirá automáticamente en `http://localhost:5000`
 
-Estos scripts automáticamente:
-1. Verifican Python
-2. Crean el entorno virtual
-3. Instalan dependencias
-4. Inician el servidor
+> El script automáticamente:
+> - ✅ Verifica que Python esté instalado
+> - ✅ Crea el entorno virtual
+> - ✅ Instala todas las dependencias necesarias
+> - ✅ Inicia el servidor
+> - ✅ Abre el navegador
 
-#### Opción 2: Instalación Manual
+---
 
-1. **Crear entorno virtual:**
+#### 📝 **Opción 2: Instalación Manual**
+
+Si prefieres hacerlo paso a paso:
+
+**1. Abre una terminal en la carpeta del proyecto**
+
+**2. Crea el entorno virtual:**
 ```bash
 python -m venv venv
 ```
 
-2. **Activar entorno virtual:**
+**3. Activa el entorno virtual:**
 
-**Windows (PowerShell):**
-```powershell
-.\venv\Scripts\Activate.ps1
-```
+- **Windows (PowerShell):**
+  ```powershell
+  .\venv\Scripts\Activate.ps1
+  ```
 
-**Windows (CMD):**
-```cmd
-venv\Scripts\activate.bat
-```
+- **Windows (CMD):**
+  ```cmd
+  venv\Scripts\activate.bat
+  ```
 
-**Linux/Mac:**
-```bash
-source venv/bin/activate
-```
+- **Linux/Mac:**
+  ```bash
+  source venv/bin/activate
+  ```
 
-3. **Instalar dependencias:**
+**4. Instala las dependencias:**
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Iniciar aplicación:**
+**5. Inicia el servidor:**
 ```bash
 python app.py
 ```
 
-5. **Abrir en navegador:**
+**6. Abre tu navegador en:**
 ```
 http://localhost:5000
 ```
 
-### Uso de la Aplicación
+**7. Para detener el servidor:**
+- Presiona `Ctrl + C` en la terminal
 
-1. Ejecuta `start.bat` o `start.ps1` (Windows)
-2. Abre tu navegador en `http://localhost:5000`
-3. ¡Explora el dashboard y los módulos!
-4. Presiona `Ctrl+C` en la terminal para detener el servidor
+---
+
+## 📚 Guía de Uso
+
+### 🎯 Tour Guiado
+
+Al abrir la aplicación, haz clic en el botón **❓** en la esquina superior derecha para ver el tour guiado de cada módulo.
+
+### 📊 Módulos Disponibles
+
+#### 1. **Dashboard**
+- Vista general de todos los ensayos
+- Estadísticas resumidas
+- Gráficos interactivos
+
+#### 2. **Contenido de Humedad**
+- Visualización de datos de hidrometría
+- Gráficos de dispersión
+- Tabla detallada con todos los parámetros
+
+#### 3. **Límites de Atterberg**
+- Límite Líquido (LL)
+- Límite Plástico (LP)
+- Índice de Plasticidad (IP)
+- Carta de Plasticidad de Casagrande
+
+#### 4. **Clasificación de Suelos**
+- Sistema AASHTO
+- Distribución granulométrica
+- Gráficos de clasificación
+
+#### 5. **Fases del Suelo**
+- Diagrama de fases
+- Relaciones volumétricas
+- Cálculos automáticos
+
+#### 6. **Generador de Informes**
+- Selecciona ensayos a incluir
+- Elige formato: PDF, Excel o Word
+- Incluye gráficos y tablas automáticamente
+- Descarga con un clic
+
+---
 
 ## 📁 Estructura del Proyecto
 
 ```
 ProyectoHSGVA/
 │
-├── app.py                     # Aplicación Flask principal
-├── requirements.txt           # Dependencias Python
-├── start.bat                  # Script de inicio (Windows CMD)
-├── start.ps1                  # Script de inicio (PowerShell)
+├── 📄 app.py                  # Servidor Flask
+├── 📄 index.html              # Interfaz principal
+├── 📋 requirements.txt        # Dependencias Python
+├── 🚀 start.bat              # Inicio automático (CMD)
+├── 🚀 start.ps1              # Inicio automático (PowerShell)
 │
-├── index.html                 # Página principal
+├── 📁 css/                    # Estilos
+│   ├── styles.css
+│   └── modules.css
 │
-├── css/
-│   ├── styles.css            # Estilos generales
-│   └── modules.css           # Estilos de módulos
-│
-├── js/
+├── 📁 js/                     # JavaScript
 │   ├── main.js               # Funcionalidad principal
-│   ├── charts.js             # Gráficos del dashboard
-│   └── modules/
-│       ├── humedad.js        # Módulo de Humedad ✅
-│       ├── atterberg.js      # Módulo de Atterberg
-│       ├── clasificacion.js  # Módulo de Clasificación
-│       ├── fases.js          # Módulo de Fases
-│       └── informe.js        # Generador de informes
+│   ├── charts.js             # Gráficos
+│   ├── tour.js               # Tour guiado
+│   └── modules/              # Módulos por ensayo
 │
-├── etl/                      # Módulos ETL de Python
-│   ├── __init__.py
-│   ├── hidrometria_etl.py    # ETL Hidrometría
-│   ├── clasificacion_etl.py  # ETL Clasificación
-│   ├── atterberg_etl.py      # ETL Atterberg
-│   └── data_processor.py     # Procesador general
+├── 📁 etl/                    # Procesamiento de datos
+│   ├── hidrometria_etl.py
+│   ├── atterberg_etl.py
+│   └── clasificacion_etl.py
 │
-├── Data/                     # Datos de ensayos de laboratorio
-│   ├── Limites de Atterberg.xlsx
-│   ├── Clasificacion de Suelos #2.xlsx
-│   └── Hidrometria #4.xlsx
-│
-└── README.md                 # Este archivo
+└── 📁 Data/                   # Datos de ensayos
+    ├── Hidrometria #4.xlsx
+    ├── Limites de Atterberg.xlsx
+    └── Clasificacion de Suelos #2.xlsx
 ```
-
-## 🧪 Guía de Uso: Módulo de Contenido de Humedad
-
-### Paso 1: Navegación
-1. Abre la aplicación en tu navegador
-2. En el menú lateral, haz clic en **"💧 Contenido de Humedad"**
-
-### Paso 2: Ingreso de Datos
-
-**Información General:**
-- Nombre del Proyecto
-- Número de Muestra
-- Fecha del Ensayo
-- Operador (opcional)
-
-**Datos de Medición:**
-- N° de Recipiente
-- Peso del Recipiente (g)
-- Peso Recipiente + Suelo Húmedo (g)
-- Peso Recipiente + Suelo Seco (g)
-
-### Paso 3: Cálculo
-1. Completa todos los campos obligatorios (*)
-2. Haz clic en **"Calcular"**
-3. Los resultados se mostrarán automáticamente
-
-### Paso 4: Múltiples Muestras
-1. Para agregar otra muestra del mismo proyecto
-2. Haz clic en **"Agregar Otra Muestra"**
-3. Ingresa los nuevos datos
-4. El sistema calculará el promedio automáticamente
-
-### Paso 5: Exportar Datos
-- Haz clic en **"Exportar"** para descargar los datos en formato CSV
-- El archivo incluirá todas las muestras registradas
-
-## 📊 Fórmulas Implementadas
-
-### Contenido de Humedad (w%)
-
-```
-Ww = Peso Húmedo - Peso Seco           (Peso del agua)
-Ws = Peso Seco - Peso Recipiente       (Peso del suelo seco)
-w% = (Ww / Ws) × 100                   (Contenido de humedad)
-```
-
-### Clasificación por Humedad
-
-- **Muy Seco:** w < 10%
-- **Seco:** 10% ≤ w < 20%
-- **Húmedo:** 20% ≤ w < 30%
-- **Muy Húmedo:** w ≥ 30%
-
-## 🛠️ Validaciones Implementadas
-
-El sistema valida automáticamente:
-- ✅ Campos obligatorios completos
-- ✅ Valores numéricos válidos
-- ✅ Peso húmedo > Peso del recipiente
-- ✅ Peso seco > Peso del recipiente
-- ✅ Peso húmedo > Peso seco
-- ✅ Rangos lógicos de medición
-
-## 🎨 Paleta de Colores
-
-```css
-Verde Principal: #4a7c59
-Verde Oscuro:    #2d5016
-Verde Claro:     #6ba083
-Verde Acento:    #a8d5ba
-Amarillo Dorado: #d4af37
-```
-
-## 📦 Tecnologías Utilizadas
-
-**Backend:**
-- **Python 3.x** - Lenguaje de programación
-- **Flask** - Framework web ligero
-- **Pandas** - Análisis y manipulación de datos
-- **NumPy** - Cálculos científicos
-- **OpenPyXL** - Lectura/escritura de archivos Excel
-
-**Frontend:**
-- **HTML5** - Estructura
-- **CSS3** - Estilos y animaciones
-- **JavaScript** (Vanilla) - Funcionalidad
-- **Chart.js** - Gráficos de barras, líneas y pie
-- **Plotly.js** - Gráficos avanzados (waterfall, gauge, treemap)
-- **Font Awesome** - Iconos
-
-**Integración:**
-- **API REST** - Comunicación backend-frontend
-- **JSON** - Formato de intercambio de datos
-
-## 🔜 Próximos Desarrollos
-
-### Módulos en Desarrollo:
-
-1. **Límites de Atterberg:**
-   - Límite Líquido (LL) con curva de fluidez
-   - Límite Plástico (LP)
-   - Índice de Plasticidad (IP)
-   - Gráfico interactivo LL vs golpes
-
-2. **Clasificación de Suelos:**
-   - Sistema SUCS (Unified Soil Classification System)
-   - Sistema AASHTO
-   - Análisis granulométrico
-   - Gráficos de distribución
-
-3. **Fases del Suelo:**
-   - Relaciones de fase
-   - Diagrama de fases
-   - Cálculo de propiedades volumétricas
-   - Cálculo de propiedades gravimétricas
-
-4. **Generador de Informes:**
-   - Exportación a PDF
-   - Plantillas personalizables
-   - Inclusión de gráficos
-   - Interpretación de resultados
-
-## 👥 Equipo de Desarrollo
-
-- Proyecto HSGVA
-- Análisis de Suelos y Geotecnia
-
-## 📄 Licencia
-
-Este proyecto es de uso académico y profesional.
-
-## 📞 Soporte
-
-Para preguntas o soporte técnico, contacta al equipo de desarrollo.
 
 ---
 
-**Versión:** 1.0.0  
-**Última Actualización:** Noviembre 2025  
-**Desarrollado con:** ❤️ y ☕
+## 🔧 Tecnologías
+
+**Backend:**
+- Python 3.x
+- Flask 3.0.0
+- Pandas 2.1.4
+- NumPy 1.26.2
+- ReportLab 4.0.7 (PDF)
+- Matplotlib 3.10.7 (Gráficos)
+- OpenPyXL 3.1.2 (Excel)
+
+**Frontend:**
+- HTML5, CSS3, JavaScript
+- Chart.js (Gráficos)
+- Plotly.js (Visualizaciones)
+- Driver.js (Tour guiado)
+- Font Awesome (Iconos)
+
+---
+
+## 🎨 Características de Diseño
+
+- ✨ Interfaz moderna y profesional
+- 🎨 Paleta de colores verde geotécnico
+- 📱 Diseño responsive (se adapta a móvil, tablet y PC)
+- 🌊 Animaciones suaves
+- 📊 Gráficos interactivos
+- 🎯 Tour guiado contextual
+
+---
+
+## ❓ Solución de Problemas
+
+### **El servidor no inicia**
+- Verifica que Python esté instalado: `python --version`
+- Asegúrate de estar en la carpeta correcta del proyecto
+- Intenta con la instalación manual
+
+### **Error al instalar dependencias**
+- Actualiza pip: `python -m pip install --upgrade pip`
+- Verifica tu conexión a internet
+- Ejecuta: `pip install -r requirements.txt` nuevamente
+
+### **El navegador no se abre automáticamente**
+- Abre manualmente: `http://localhost:5000`
+- Verifica que el puerto 5000 no esté en uso
+
+### **Errores de permisos en PowerShell**
+- Ejecuta PowerShell como Administrador
+- O usa `start.bat` en su lugar
+
+---
+
+## � Datos de Ejemplo
+
+El proyecto incluye datos de ejemplo en la carpeta `Data/`:
+- Ensayos de hidrometría
+- Límites de Atterberg
+- Clasificación de suelos AASHTO
+
+Estos datos se cargan automáticamente al iniciar la aplicación.
+
+---
+
+## 📄 Generación de Informes
+
+### Pasos para generar un informe:
+
+1. Ve al módulo **"Generador de Informes"**
+2. Completa la información del proyecto (título, cliente, ubicación)
+3. Selecciona los ensayos a incluir (checkbox)
+4. Marca "Incluir Gráficos" si deseas gráficos en el informe
+5. Elige el formato: **PDF**, **Excel** o **Word**
+6. Haz clic en **"Generar Informe"**
+7. El archivo se descargará automáticamente
+
+**Formatos disponibles:**
+- **PDF** - Informe profesional con tablas y gráficos
+- **Excel** - Datos editables con gráficos embebidos
+- **Word** - Documento de texto con datos
+
+---
+
+## � Actualizar Datos
+
+Para cargar tus propios datos de ensayos:
+
+1. Coloca los archivos Excel en la carpeta `Data/`
+2. Asegúrate de que el formato sea compatible
+3. Reinicia el servidor (Ctrl+C y ejecuta `start.bat` nuevamente)
+
+---
+
+## 💡 Consejos
+
+- 🎯 Usa el **Tour Guiado** (botón ❓) para familiarizarte con cada módulo
+- 📊 Los gráficos son interactivos: haz zoom, pan y descarga imágenes
+- 📄 Genera informes con gráficos para presentaciones profesionales
+- 💾 Los datos se procesan en tiempo real, no se necesita guardar
+
+---
+
+## � Versión
+
+**Versión:** 2.0.0  
+**Fecha:** Noviembre 2025  
+
+---
+
+## 🎓 Uso Académico
+
+Este sistema está diseñado para uso académico y profesional en el campo de la ingeniería geotécnica y mecánica de suelos.
+
+---
+
+**¿Necesitas ayuda?** Usa el botón ❓ en la aplicación para ver el tour guiado de cada módulo.

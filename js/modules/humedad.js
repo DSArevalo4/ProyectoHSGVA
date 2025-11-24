@@ -25,17 +25,17 @@ function initHumedadModule() {
                     <h3><i class="fas fa-database"></i> Datos del Ensayo de Hidrometría</h3>
                     <span class="badge" id="contadorDatosExcel">0 registros</span>
                 </div>
-                <div class="chart-body">
-                    <!-- Parámetros discretos -->
-                    <div id="parametrosCompactos" style="display: none; margin-bottom: 20px; padding: 12px; background: #f8f9fa; border-radius: 6px; font-size: 0.9rem;">
-                        <strong style="color: #495057;">Parámetros:</strong>
-                        <span style="margin-left: 15px;">Ws = <strong id="wsValue">-</strong> g</span>
-                        <span style="margin-left: 15px;">Gs = <strong id="gsValue">-</strong></span>
-                        <span style="margin-left: 15px;">Cm = <strong id="cmValue">-</strong></span>
-                        <span style="margin-left: 15px;">CC = <strong id="ccValue">-</strong></span>
-                        <span style="margin-left: 15px;">Alfa = <strong id="alfaValue">-</strong></span>
-                    </div>
+                <div class="chart-body" style="padding-top: 0;">
                     <div id="datosExcelTable"></div>
+                    <!-- Parámetros discretos al final -->
+                    <div id="parametrosCompactos" style="display: none; margin-top: 20px; padding: 10px 15px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-left: 4px solid var(--primary-green); border-radius: 6px; font-size: 0.95rem; line-height: 1.5;">
+                        <strong style="color: #2d5016; margin-right: 12px;">📐 Parámetros del Ensayo:</strong>
+                        <span style="margin: 0 10px; color: #495057;">Ws = <strong style="color: #2d5016;" id="wsValue">-</strong> g</span>
+                        <span style="margin: 0 10px; color: #495057;">Gs = <strong style="color: #2d5016;" id="gsValue">-</strong></span>
+                        <span style="margin: 0 10px; color: #495057;">Cm = <strong style="color: #2d5016;" id="cmValue">-</strong></span>
+                        <span style="margin: 0 10px; color: #495057;">CC = <strong style="color: #2d5016;" id="ccValue">-</strong></span>
+                        <span style="margin: 0 10px; color: #495057;">Alfa = <strong style="color: #2d5016;" id="alfaValue">-</strong></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -159,7 +159,7 @@ function mostrarDatosExcel(datos) {
     
     // Crear tabla con todos los datos
     let html = `
-        <div style="overflow-x: auto;">
+        <div style="overflow-x: auto; max-height: none;">
             <table class="data-table">
                 <thead>
                     <tr>

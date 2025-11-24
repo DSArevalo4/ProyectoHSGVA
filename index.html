@@ -7,8 +7,11 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/modules.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Driver.js -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
 </head>
 <body>
     <!-- Sidebar -->
@@ -76,12 +79,8 @@
                 <p>Procesamiento Automatizado de Ensayos de Laboratorio de Suelos</p>
             </div>
             <div class="header-actions">
-                <button class="btn-icon" title="Notificaciones">
-                    <i class="fas fa-bell"></i>
-                    <span class="badge">3</span>
-                </button>
-                <button class="btn-icon" title="Configuración">
-                    <i class="fas fa-cog"></i>
+                <button class="btn-icon" id="btnTourGuiado" title="Tour Guiado">
+                    <i class="fas fa-question-circle"></i>
                 </button>
                 <div class="user-avatar">
                     <i class="fas fa-user"></i>
@@ -261,5 +260,6 @@
     <script src="js/modules/clasificacion.js"></script>
     <script src="js/modules/fases.js"></script>
     <script src="js/modules/informe.js"></script>
+    <script src="js/tour.js"></script>
 </body>
 </html>

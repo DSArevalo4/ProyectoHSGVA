@@ -8,11 +8,20 @@ from datetime import datetime
 import os
 import sys
 import io
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.chart import BarChart, LineChart, Reference
+import matplotlib
+matplotlib.use('Agg')  # Backend sin GUI
+import matplotlib.pyplot as plt
+import base64
 
 # Agregar el directorio actual al path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -296,6 +305,7 @@ def generar_informe():
     """Generar informe en el formato solicitado"""
     try:
         data = request.get_json()
+        print(f"📊 Datos recibidos para informe: {data}")
         
         # Extraer configuración
         config = {
@@ -312,6 +322,8 @@ def generar_informe():
             'formato': data.get('formato', 'pdf')
         }
         
+        print(f"📄 Generando informe en formato: {config['formato']}")
+        
         # Generar según formato
         if config['formato'] == 'pdf':
             return generar_pdf(config)
@@ -323,89 +335,143 @@ def generar_informe():
             return jsonify({'success': False, 'error': 'Formato no soportado'}), 400
             
     except Exception as e:
-        print(f"Error generando informe: {str(e)}")
+        import traceback
+        print(f"❌ Error generando informe: {str(e)}")
+        print(traceback.format_exc())
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
 def generar_pdf(config):
-    """Generar informe en formato PDF"""
-    buffer = io.BytesIO()
-    c = canvas.Canvas(buffer, pagesize=letter)
-    width, height = letter
-    
-    # Encabezado
-    c.setFont("Helvetica-Bold", 20)
-    c.drawString(1*inch, height - 1*inch, "INFORME GEOTECNICO")
-    
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(1*inch, height - 1.5*inch, config['titulo'])
-    
-    # Información del proyecto
-    y = height - 2*inch
-    c.setFont("Helvetica", 11)
-    
-    if config['cliente']:
-        c.drawString(1*inch, y, f"Cliente: {config['cliente']}")
-        y -= 0.3*inch
-    
-    if config['proyecto']:
-        c.drawString(1*inch, y, f"Proyecto: {config['proyecto']}")
-        y -= 0.3*inch
-    
-    if config['ubicacion']:
-        c.drawString(1*inch, y, f"Ubicacion: {config['ubicacion']}")
-        y -= 0.3*inch
-    
-    c.drawString(1*inch, y, f"Fecha: {config['fecha']}")
-    y -= 0.5*inch
-    
-    # Ensayos incluidos
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(1*inch, y, "ENSAYOS INCLUIDOS:")
-    y -= 0.3*inch
-    
-    c.setFont("Helvetica", 10)
-    ensayos = []
-    
-    if config['incluirHumedad']:
-        ensayos.append("- Contenido de Humedad")
+    """Generar informe en formato PDF profesional"""
+    try:
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter,
+                              rightMargin=0.75*inch, leftMargin=0.75*inch,
+                              topMargin=0.75*inch, bottomMargin=0.75*inch)
         
-    if config['incluirAtterberg']:
-        ensayos.append("- Limites de Atterberg")
+        # Contenedor de elementos
+        elementos = []
+        styles = getSampleStyleSheet()
         
-    if config['incluirClasificacion']:
-        ensayos.append("- Clasificacion de Suelos (AASHTO)")
+        # Estilo personalizado para título
+        titulo_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#2d5016'),
+            spaceAfter=30,
+            alignment=TA_CENTER,
+            fontName='Helvetica-Bold'
+        )
         
-    if config['incluirFases']:
-        ensayos.append("- Fases del Suelo")
-    
-    for ensayo in ensayos:
-        c.drawString(1.2*inch, y, ensayo)
-        y -= 0.25*inch
-    
-    # Datos de ensayos
-    if config['incluirHumedad']:
-        y = agregar_datos_humedad_pdf(c, y)
-    
-    if config['incluirAtterberg']:
-        y = agregar_datos_atterberg_pdf(c, y)
-    
-    if config['incluirClasificacion']:
-        y = agregar_datos_clasificacion_pdf(c, y)
-    
-    # Pie de página
-    c.setFont("Helvetica-Italic", 8)
-    c.drawString(1*inch, 0.5*inch, f"Generado por Sistema HSGVA - {datetime.now().strftime('%d/%m/%Y %H:%M')}")
-    
-    c.save()
-    buffer.seek(0)
-    
-    return send_file(
-        buffer,
-        as_attachment=True,
-        download_name=f"informe_{config['fecha']}.pdf",
-        mimetype='application/pdf'
-    )
+        # Estilo para subtítulos
+        subtitulo_style = ParagraphStyle(
+            'CustomSubtitle',
+            parent=styles['Heading2'],
+            fontSize=16,
+            textColor=colors.HexColor('#4a7c59'),
+            spaceAfter=12,
+            spaceBefore=20,
+            fontName='Helvetica-Bold'
+        )
+        
+        # Título principal
+        elementos.append(Paragraph("INFORME GEOTÉCNICO", titulo_style))
+        elementos.append(Paragraph(config['titulo'], styles['Heading2']))
+        elementos.append(Spacer(1, 0.3*inch))
+        
+        # Información del proyecto en tabla
+        info_data = [
+            ['Campo', 'Información'],
+            ['Fecha del Informe:', config['fecha']],
+        ]
+        
+        if config['cliente']:
+            info_data.append(['Cliente:', config['cliente']])
+        if config['proyecto']:
+            info_data.append(['Proyecto:', config['proyecto']])
+        if config['ubicacion']:
+            info_data.append(['Ubicación:', config['ubicacion']])
+        
+        info_table = Table(info_data, colWidths=[2*inch, 4*inch])
+        info_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4a7c59')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('TOPPADDING', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ]))
+        
+        elementos.append(info_table)
+        elementos.append(Spacer(1, 0.3*inch))
+        
+        # Ensayos incluidos
+        elementos.append(Paragraph("ENSAYOS INCLUIDOS", subtitulo_style))
+        
+        ensayos_lista = []
+        if config['incluirHumedad']:
+            ensayos_lista.append('• Contenido de Humedad')
+        if config['incluirAtterberg']:
+            ensayos_lista.append('• Límites de Atterberg')
+        if config['incluirClasificacion']:
+            ensayos_lista.append('• Clasificación de Suelos (AASHTO)')
+        if config['incluirFases']:
+            ensayos_lista.append('• Fases del Suelo')
+        
+        for ensayo in ensayos_lista:
+            elementos.append(Paragraph(ensayo, styles['Normal']))
+        
+        elementos.append(Spacer(1, 0.2*inch))
+        
+        # Agregar datos de ensayos
+        if config['incluirHumedad']:
+            elementos.extend(agregar_datos_humedad_pdf_mejorado(config))
+        
+        if config['incluirAtterberg']:
+            elementos.extend(agregar_datos_atterberg_pdf_mejorado(config))
+        
+        if config['incluirClasificacion']:
+            elementos.extend(agregar_datos_clasificacion_pdf_mejorado(config))
+        
+        # Pie de página
+        elementos.append(Spacer(1, 0.5*inch))
+        pie_style = ParagraphStyle(
+            'Footer',
+            parent=styles['Normal'],
+            fontSize=8,
+            textColor=colors.grey,
+            alignment=TA_CENTER
+        )
+        elementos.append(Paragraph(
+            f"Generado por Sistema HSGVA - {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+            pie_style
+        ))
+        
+        # Construir PDF
+        doc.build(elementos)
+        buffer.seek(0)
+        
+        filename = f"informe_{config['fecha']}.pdf"
+        print(f"✅ PDF generado: {filename}")
+        
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        import traceback
+        print(f"❌ Error en generar_pdf: {str(e)}")
+        print(traceback.format_exc())
+        raise
 
 
 def generar_excel(config):
@@ -458,13 +524,13 @@ def generar_excel(config):
     
     # Datos de ensayos
     if config['incluirHumedad']:
-        row = agregar_datos_humedad_excel(ws, row)
+        row = agregar_datos_humedad_excel(ws, row, config)
     
     if config['incluirAtterberg']:
-        row = agregar_datos_atterberg_excel(ws, row)
+        row = agregar_datos_atterberg_excel(ws, row, config)
     
     if config['incluirClasificacion']:
-        row = agregar_datos_clasificacion_excel(ws, row)
+        row = agregar_datos_clasificacion_excel(ws, row, config)
     
     # Ajustar ancho de columnas
     ws.column_dimensions['A'].width = 20
@@ -478,11 +544,14 @@ def generar_excel(config):
     wb.save(buffer)
     buffer.seek(0)
     
+    filename = f"informe_{config['fecha']}.xlsx"
+    print(f"✅ Excel generado: {filename}")
+    
     return send_file(
         buffer,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         as_attachment=True,
-        download_name=f"informe_{config['fecha']}.xlsx",
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        download_name=filename
     )
 
 
@@ -520,12 +589,288 @@ ENSAYOS INCLUIDOS
     buffer.write(contenido.encode('utf-8'))
     buffer.seek(0)
     
+    filename = f"informe_{config['fecha']}.txt"
+    print(f"✅ TXT generado: {filename}")
+    
     return send_file(
         buffer,
+        mimetype='text/plain',
         as_attachment=True,
-        download_name=f"informe_{config['fecha']}.txt",
-        mimetype='text/plain'
+        download_name=filename
     )
+
+
+def agregar_datos_humedad_pdf_mejorado(config):
+    """Agregar datos de humedad con tabla y gráfico al PDF"""
+    elementos = []
+    styles = getSampleStyleSheet()
+    
+    try:
+        datos = hidrometria_etl.load_data()
+        
+        subtitulo_style = ParagraphStyle(
+            'Subtitulo',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#4a7c59'),
+            spaceAfter=12,
+            spaceBefore=20,
+            fontName='Helvetica-Bold'
+        )
+        
+        elementos.append(Paragraph("CONTENIDO DE HUMEDAD", subtitulo_style))
+        elementos.append(Spacer(1, 0.1*inch))
+        
+        # Resumen estadístico
+        if len(datos) > 0:
+            humedades = [d.get('Humedad (%)', 0) for d in datos]
+            promedio = sum(humedades) / len(humedades)
+            maximo = max(humedades)
+            minimo = min(humedades)
+            
+            resumen_text = f"<b>Total de muestras:</b> {len(datos)} | <b>Promedio:</b> {promedio:.2f}% | <b>Máximo:</b> {maximo:.2f}% | <b>Mínimo:</b> {minimo:.2f}%"
+            elementos.append(Paragraph(resumen_text, styles['Normal']))
+            elementos.append(Spacer(1, 0.15*inch))
+            
+            # Tabla de datos (primeras 10 muestras)
+            tabla_data = [['N°', 'Humedad (%)', 'Temperatura (°C)', 'Peso Húmedo (g)', 'Peso Seco (g)']]
+            
+            for i, dato in enumerate(datos[:10], 1):
+                tabla_data.append([
+                    str(i),
+                    f"{dato.get('Humedad (%)', 0):.2f}",
+                    f"{dato.get('Temperatura', 0):.1f}",
+                    f"{dato.get('Peso Humedo', 0):.2f}",
+                    f"{dato.get('Peso Seco', 0):.2f}"
+                ])
+            
+            tabla = Table(tabla_data, colWidths=[0.5*inch, 1.2*inch, 1.5*inch, 1.5*inch, 1.5*inch])
+            tabla.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4a7c59')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
+            ]))
+            
+            elementos.append(tabla)
+            
+            # Generar gráfico si está habilitado
+            if config.get('incluirGraficos'):
+                elementos.append(Spacer(1, 0.2*inch))
+                grafico_buffer = generar_grafico_humedad(datos[:10])
+                if grafico_buffer:
+                    img = Image(grafico_buffer, width=5*inch, height=3*inch)
+                    elementos.append(img)
+        
+        elementos.append(Spacer(1, 0.2*inch))
+        
+    except Exception as e:
+        print(f"Error agregando humedad: {e}")
+        elementos.append(Paragraph(f"Error al cargar datos de humedad", styles['Normal']))
+    
+    return elementos
+
+
+def agregar_datos_atterberg_pdf_mejorado(config):
+    """Agregar datos de Atterberg con tabla al PDF"""
+    elementos = []
+    styles = getSampleStyleSheet()
+    
+    try:
+        datos = atterberg_etl.load_data()
+        
+        subtitulo_style = ParagraphStyle(
+            'Subtitulo',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#4a7c59'),
+            spaceAfter=12,
+            spaceBefore=20,
+            fontName='Helvetica-Bold'
+        )
+        
+        elementos.append(Paragraph("LÍMITES DE ATTERBERG", subtitulo_style))
+        elementos.append(Spacer(1, 0.1*inch))
+        
+        if len(datos) > 0:
+            elementos.append(Paragraph(f"<b>Total de ensayos:</b> {len(datos)}", styles['Normal']))
+            elementos.append(Spacer(1, 0.15*inch))
+            
+            # Tabla de datos
+            tabla_data = [['N°', 'Límite Líquido (%)', 'Límite Plástico (%)', 'Índice Plasticidad']]
+            
+            for i, dato in enumerate(datos, 1):
+                ll = dato.get('Limite Liquido', 0)
+                lp = dato.get('Limite Plastico', 0)
+                ip = ll - lp if ll and lp else 0
+                
+                tabla_data.append([
+                    str(i),
+                    f"{ll:.2f}" if ll else 'N/A',
+                    f"{lp:.2f}" if lp else 'N/A',
+                    f"{ip:.2f}"
+                ])
+            
+            tabla = Table(tabla_data, colWidths=[0.8*inch, 1.8*inch, 1.8*inch, 1.8*inch])
+            tabla.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#667eea')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
+            ]))
+            
+            elementos.append(tabla)
+            
+            # Generar gráfico si está habilitado
+            if config.get('incluirGraficos'):
+                elementos.append(Spacer(1, 0.2*inch))
+                grafico_buffer = generar_grafico_atterberg(datos)
+                if grafico_buffer:
+                    img = Image(grafico_buffer, width=5*inch, height=3*inch)
+                    elementos.append(img)
+        
+        elementos.append(Spacer(1, 0.2*inch))
+        
+    except Exception as e:
+        print(f"Error agregando Atterberg: {e}")
+        elementos.append(Paragraph(f"Error al cargar datos de Atterberg", styles['Normal']))
+    
+    return elementos
+
+
+def agregar_datos_clasificacion_pdf_mejorado(config):
+    """Agregar datos de clasificación con tabla al PDF"""
+    elementos = []
+    styles = getSampleStyleSheet()
+    
+    try:
+        datos = clasificacion_etl.load_data()
+        
+        subtitulo_style = ParagraphStyle(
+            'Subtitulo',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#4a7c59'),
+            spaceAfter=12,
+            spaceBefore=20,
+            fontName='Helvetica-Bold'
+        )
+        
+        elementos.append(Paragraph("CLASIFICACIÓN DE SUELOS (AASHTO)", subtitulo_style))
+        elementos.append(Spacer(1, 0.1*inch))
+        
+        if len(datos) > 0:
+            elementos.append(Paragraph(f"<b>Total de muestras:</b> {len(datos)}", styles['Normal']))
+            elementos.append(Spacer(1, 0.15*inch))
+            
+            # Tabla de datos
+            tabla_data = [['N°', 'Clasificación AASHTO', '% Pasa Tamiz #200', 'Descripción']]
+            
+            for i, dato in enumerate(datos, 1):
+                tabla_data.append([
+                    str(i),
+                    dato.get('Clasificacion AASHTO', 'N/A'),
+                    f"{dato.get('Porcentaje que Pasa', 0):.2f}%",
+                    dato.get('Descripcion', 'N/A')
+                ])
+            
+            tabla = Table(tabla_data, colWidths=[0.5*inch, 1.8*inch, 1.8*inch, 2.1*inch])
+            tabla.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#10b981')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
+            ]))
+            
+            elementos.append(tabla)
+        
+        elementos.append(Spacer(1, 0.2*inch))
+        
+    except Exception as e:
+        print(f"Error agregando clasificación: {e}")
+        elementos.append(Paragraph(f"Error al cargar datos de clasificación", styles['Normal']))
+    
+    return elementos
+
+
+def generar_grafico_humedad(datos):
+    """Generar gráfico de barras para contenido de humedad"""
+    try:
+        plt.figure(figsize=(6, 3.5))
+        
+        muestras = [f"M{i+1}" for i in range(len(datos))]
+        humedades = [d.get('Humedad (%)', 0) for d in datos]
+        
+        plt.bar(muestras, humedades, color='#3b82f6', alpha=0.7, edgecolor='navy')
+        plt.xlabel('Muestras', fontsize=10)
+        plt.ylabel('Humedad (%)', fontsize=10)
+        plt.title('Contenido de Humedad por Muestra', fontsize=12, fontweight='bold')
+        plt.xticks(rotation=45, ha='right', fontsize=8)
+        plt.yticks(fontsize=8)
+        plt.grid(axis='y', alpha=0.3, linestyle='--')
+        plt.tight_layout()
+        
+        # Guardar en buffer
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+        plt.close()
+        buffer.seek(0)
+        
+        return buffer
+    except Exception as e:
+        print(f"Error generando gráfico de humedad: {e}")
+        return None
+
+
+def generar_grafico_atterberg(datos):
+    """Generar gráfico comparativo de límites de Atterberg"""
+    try:
+        plt.figure(figsize=(6, 3.5))
+        
+        ensayos = [f"E{i+1}" for i in range(len(datos))]
+        ll = [d.get('Limite Liquido', 0) for d in datos]
+        lp = [d.get('Limite Plastico', 0) for d in datos]
+        
+        x = range(len(ensayos))
+        width = 0.35
+        
+        plt.bar([i - width/2 for i in x], ll, width, label='Límite Líquido', color='#667eea', alpha=0.7)
+        plt.bar([i + width/2 for i in x], lp, width, label='Límite Plástico', color='#f59e0b', alpha=0.7)
+        
+        plt.xlabel('Ensayos', fontsize=10)
+        plt.ylabel('Límite (%)', fontsize=10)
+        plt.title('Límites de Atterberg', fontsize=12, fontweight='bold')
+        plt.xticks(x, ensayos, fontsize=8)
+        plt.yticks(fontsize=8)
+        plt.legend(fontsize=8)
+        plt.grid(axis='y', alpha=0.3, linestyle='--')
+        plt.tight_layout()
+        
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+        plt.close()
+        buffer.seek(0)
+        
+        return buffer
+    except Exception as e:
+        print(f"Error generando gráfico de Atterberg: {e}")
+        return None
 
 
 def agregar_datos_humedad_pdf(c, y):
@@ -596,49 +941,141 @@ def agregar_datos_clasificacion_pdf(c, y):
     return y
 
 
-def agregar_datos_humedad_excel(ws, row):
-    """Agregar datos de humedad al Excel"""
+def agregar_datos_humedad_excel(ws, row, config):
+    """Agregar datos de humedad al Excel con formato y gráfico"""
     try:
         datos = hidrometria_etl.load_data()
         
+        # Título sección
+        ws.merge_cells(f'A{row}:E{row}')
         ws[f'A{row}'] = "CONTENIDO DE HUMEDAD"
-        ws[f'A{row}'].font = Font(bold=True, size=12)
+        ws[f'A{row}'].font = Font(bold=True, size=14, color="2D5016")
+        ws[f'A{row}'].alignment = Alignment(horizontal='center')
         row += 1
         
-        # Encabezados
-        ws[f'A{row}'] = "Muestra"
-        ws[f'B{row}'] = "Humedad (%)"
-        ws[f'C{row}'] = "Temperatura"
-        for cell in [ws[f'A{row}'], ws[f'B{row}'], ws[f'C{row}']]:
-            cell.font = Font(bold=True)
-            cell.fill = PatternFill(start_color="4A7C59", end_color="4A7C59", fill_type="solid")
-            cell.font = Font(bold=True, color="FFFFFF")
-        row += 1
-        
-        # Datos
-        for i, dato in enumerate(datos[:10], 1):
-            ws[f'A{row}'] = f"M-{i}"
-            ws[f'B{row}'] = dato.get('Humedad (%)', 0)
-            ws[f'C{row}'] = dato.get('Temperatura', '')
+        # Resumen estadístico
+        if len(datos) > 0:
+            humedades = [d.get('Humedad (%)', 0) for d in datos]
+            promedio = sum(humedades) / len(humedades)
+            ws[f'A{row}'] = f"Muestras: {len(datos)}"
+            ws[f'B{row}'] = f"Promedio: {promedio:.2f}%"
+            ws[f'C{row}'] = f"Máximo: {max(humedades):.2f}%"
+            ws[f'D{row}'] = f"Mínimo: {min(humedades):.2f}%"
             row += 1
         
         row += 1
+        
+        # Encabezados de tabla
+        headers = ["N°", "Humedad (%)", "Temperatura (°C)", "Peso Húmedo (g)", "Peso Seco (g)"]
+        for col, header in enumerate(headers, start=1):
+            cell = ws.cell(row=row, column=col, value=header)
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = PatternFill(start_color="4A7C59", end_color="4A7C59", fill_type="solid")
+            cell.alignment = Alignment(horizontal='center')
+        row += 1
+        
+        # Datos
+        start_data_row = row
+        for i, dato in enumerate(datos[:10], 1):
+            ws.cell(row=row, column=1, value=i)
+            ws.cell(row=row, column=2, value=dato.get('Humedad (%)', 0))
+            ws.cell(row=row, column=3, value=dato.get('Temperatura', 0))
+            ws.cell(row=row, column=4, value=dato.get('Peso Humedo', 0))
+            ws.cell(row=row, column=5, value=dato.get('Peso Seco', 0))
+            
+            # Formatear números
+            for col in range(2, 6):
+                ws.cell(row=row, column=col).number_format = '0.00'
+                ws.cell(row=row, column=col).alignment = Alignment(horizontal='center')
+            
+            row += 1
+        
+        # Agregar gráfico si está habilitado
+        if config.get('incluirGraficos') and len(datos) > 0:
+            chart = BarChart()
+            chart.title = "Contenido de Humedad por Muestra"
+            chart.y_axis.title = "Humedad (%)"
+            chart.x_axis.title = "Muestra"
+            
+            # Referencias de datos
+            data = Reference(ws, min_col=2, min_row=start_data_row-1, max_row=row-1)
+            cats = Reference(ws, min_col=1, min_row=start_data_row, max_row=row-1)
+            
+            chart.add_data(data, titles_from_data=True)
+            chart.set_categories(cats)
+            chart.height = 10
+            chart.width = 20
+            
+            # Posicionar gráfico
+            ws.add_chart(chart, f'G{start_data_row-2}')
+        
+        row += 2
     except Exception as e:
         print(f"Error agregando humedad a Excel: {e}")
     
     return row
 
 
-def agregar_datos_atterberg_excel(ws, row):
-    """Agregar datos de Atterberg al Excel"""
+def agregar_datos_atterberg_excel(ws, row, config):
+    """Agregar datos de Atterberg al Excel con formato y gráfico"""
     try:
         datos = atterberg_etl.load_data()
         
-        ws[f'A{row}'] = "LIMITES DE ATTERBERG"
-        ws[f'A{row}'].font = Font(bold=True, size=12)
+        # Título sección
+        ws.merge_cells(f'A{row}:E{row}')
+        ws[f'A{row}'] = "LÍMITES DE ATTERBERG"
+        ws[f'A{row}'].font = Font(bold=True, size=14, color="667EEA")
+        ws[f'A{row}'].alignment = Alignment(horizontal='center')
         row += 1
         
         ws[f'A{row}'] = f"Total de ensayos: {len(datos)}"
+        row += 2
+        
+        # Encabezados
+        headers = ["N°", "Límite Líquido (%)", "Límite Plástico (%)", "Índice Plasticidad"]
+        for col, header in enumerate(headers, start=1):
+            cell = ws.cell(row=row, column=col, value=header)
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = PatternFill(start_color="667EEA", end_color="667EEA", fill_type="solid")
+            cell.alignment = Alignment(horizontal='center')
+        row += 1
+        
+        # Datos
+        start_data_row = row
+        for i, dato in enumerate(datos, 1):
+            ll = dato.get('Limite Liquido', 0)
+            lp = dato.get('Limite Plastico', 0)
+            ip = ll - lp if ll and lp else 0
+            
+            ws.cell(row=row, column=1, value=i)
+            ws.cell(row=row, column=2, value=ll)
+            ws.cell(row=row, column=3, value=lp)
+            ws.cell(row=row, column=4, value=ip)
+            
+            for col in range(2, 5):
+                ws.cell(row=row, column=col).number_format = '0.00'
+                ws.cell(row=row, column=col).alignment = Alignment(horizontal='center')
+            
+            row += 1
+        
+        # Agregar gráfico comparativo
+        if config.get('incluirGraficos') and len(datos) > 0:
+            chart = BarChart()
+            chart.type = "col"
+            chart.title = "Límites de Atterberg"
+            chart.y_axis.title = "Límite (%)"
+            chart.x_axis.title = "Ensayo"
+            
+            data = Reference(ws, min_col=2, min_row=start_data_row-1, max_col=3, max_row=row-1)
+            cats = Reference(ws, min_col=1, min_row=start_data_row, max_row=row-1)
+            
+            chart.add_data(data, titles_from_data=True)
+            chart.set_categories(cats)
+            chart.height = 10
+            chart.width = 20
+            
+            ws.add_chart(chart, f'G{start_data_row-2}')
+        
         row += 2
     except Exception as e:
         print(f"Error agregando Atterberg a Excel: {e}")
@@ -646,16 +1083,43 @@ def agregar_datos_atterberg_excel(ws, row):
     return row
 
 
-def agregar_datos_clasificacion_excel(ws, row):
+def agregar_datos_clasificacion_excel(ws, row, config):
     """Agregar datos de clasificación al Excel"""
     try:
         datos = clasificacion_etl.load_data()
         
-        ws[f'A{row}'] = "CLASIFICACION DE SUELOS (AASHTO)"
-        ws[f'A{row}'].font = Font(bold=True, size=12)
+        # Título sección
+        ws.merge_cells(f'A{row}:E{row}')
+        ws[f'A{row}'] = "CLASIFICACIÓN DE SUELOS (AASHTO)"
+        ws[f'A{row}'].font = Font(bold=True, size=14, color="10B981")
+        ws[f'A{row}'].alignment = Alignment(horizontal='center')
         row += 1
         
         ws[f'A{row}'] = f"Total de muestras: {len(datos)}"
+        row += 2
+        
+        # Encabezados
+        headers = ["N°", "Clasificación AASHTO", "% Pasa Tamiz #200", "Descripción"]
+        for col, header in enumerate(headers, start=1):
+            cell = ws.cell(row=row, column=col, value=header)
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = PatternFill(start_color="10B981", end_color="10B981", fill_type="solid")
+            cell.alignment = Alignment(horizontal='center')
+        row += 1
+        
+        # Datos
+        for i, dato in enumerate(datos, 1):
+            ws.cell(row=row, column=1, value=i)
+            ws.cell(row=row, column=2, value=dato.get('Clasificacion AASHTO', 'N/A'))
+            ws.cell(row=row, column=3, value=dato.get('Porcentaje que Pasa', 0))
+            ws.cell(row=row, column=4, value=dato.get('Descripcion', 'N/A'))
+            
+            ws.cell(row=row, column=3).number_format = '0.00'
+            ws.cell(row=row, column=2).alignment = Alignment(horizontal='center')
+            ws.cell(row=row, column=3).alignment = Alignment(horizontal='center')
+            
+            row += 1
+        
         row += 2
     except Exception as e:
         print(f"Error agregando clasificacion a Excel: {e}")

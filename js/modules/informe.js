@@ -68,7 +68,7 @@ function initInformeModule() {
         '<label class="formato-card"><input type="radio" name="formato" value="excel"><div class="formato-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"><i class="fas fa-file-excel"></i></div><div class="formato-info"><strong>Excel</strong></div></label>' +
         '<label class="formato-card"><input type="radio" name="formato" value="word"><div class="formato-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);"><i class="fas fa-file-word"></i></div><div class="formato-info"><strong>Word</strong></div></label></div></div></div>' +
         '<div class="card"><div class="card-header"><h3><i class="fas fa-eye"></i> Vista Previa</h3></div><div class="card-body"><div id="vistaPrevia" style="background: #f8fafc; padding: 20px; border-radius: 8px; min-height: 100px;"></div>' +
-        '<div style="margin-top: 20px; display: flex; gap: 15px; justify-content: flex-end;"><button class="btn-secondary" onclick="limpiarFormularioInforme()"><i class="fas fa-undo"></i> Limpiar</button><button class="btn-primary" onclick="generarInforme()"><i class="fas fa-download"></i> Generar Informe</button></div></div></div>';
+        '<div style="margin-top: 20px; display: flex; gap: 15px; justify-content: flex-end;"><button class="btn-secondary" id="btnLimpiar"><i class="fas fa-undo"></i> Limpiar</button><button class="btn-primary" id="btnGenerarInforme"><i class="fas fa-download"></i> Generar Informe</button></div></div></div>';
 
     initInformeEventListeners();
     actualizarVistaPrevia();
@@ -76,6 +76,8 @@ function initInformeModule() {
 }
 
 function initInformeEventListeners() {
+    console.log('Agregando event listeners...');
+    
     ['checkHumedad', 'checkAtterberg', 'checkClasificacion', 'checkFases', 'checkGraficos'].forEach(function(id) {
         const checkbox = document.getElementById(id);
         if (checkbox) {
@@ -100,6 +102,22 @@ function initInformeEventListeners() {
             e.target.closest('.formato-card').classList.add('selected');
         });
     });
+    
+    // Event listener para botón de generar
+    var btnGenerar = document.getElementById('btnGenerarInforme');
+    if (btnGenerar) {
+        btnGenerar.addEventListener('click', generarInforme);
+        console.log('Event listener agregado al boton Generar');
+    } else {
+        console.error('No se encontro el boton btnGenerarInforme');
+    }
+    
+    // Event listener para botón de limpiar
+    var btnLimpiar = document.getElementById('btnLimpiar');
+    if (btnLimpiar) {
+        btnLimpiar.addEventListener('click', limpiarFormularioInforme);
+        console.log('Event listener agregado al boton Limpiar');
+    }
 }
 
 function actualizarConfigInforme() {
@@ -166,24 +184,36 @@ function limpiarFormularioInforme() {
 }
 
 function generarInforme() {
+    console.log('=== GENERAR INFORME INICIADO ===');
     actualizarConfigInforme();
+    
+    console.log('Configuracion actualizada:', informeConfig);
+    
     if (!informeConfig.incluirHumedad && !informeConfig.incluirAtterberg && !informeConfig.incluirClasificacion && !informeConfig.incluirFases) {
+        console.warn('No hay ensayos seleccionados');
         alert('Selecciona al menos un ensayo');
         return;
     }
     if (!informeConfig.titulo.trim()) {
+        console.warn('No hay titulo');
         alert('Ingresa un titulo');
         return;
     }
     
     var btn = document.getElementById('btnGenerarInforme');
-    if (!btn) return;
+    if (!btn) {
+        console.error('No se encontro el boton btnGenerarInforme');
+        return;
+    }
+    
+    console.log('Boton encontrado, iniciando generacion...');
     
     var originalText = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
     
-    console.log('Generando informe:', informeConfig);
+    console.log('Enviando peticion a /api/informe/generar');
+    console.log('Datos a enviar:', informeConfig);
     
     // Hacer petición al backend
     fetch('/api/informe/generar', {
@@ -194,12 +224,15 @@ function generarInforme() {
         body: JSON.stringify(informeConfig)
     })
     .then(function(response) {
+        console.log('Respuesta recibida:', response.status, response.statusText);
         if (!response.ok) {
-            throw new Error('Error al generar informe');
+            throw new Error('Error al generar informe: ' + response.status);
         }
         return response.blob();
     })
     .then(function(blob) {
+        console.log('Blob recibido, tamano:', blob.size, 'bytes');
+        
         // Crear URL temporal y descargar
         var url = window.URL.createObjectURL(blob);
         var a = document.createElement('a');
@@ -209,10 +242,14 @@ function generarInforme() {
                        informeConfig.formato === 'excel' ? 'xlsx' : 'txt';
         a.download = 'informe_' + informeConfig.fecha + '.' + extension;
         
+        console.log('Descargando archivo:', a.download);
+        
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
+        
+        console.log('Descarga completada');
         
         btn.innerHTML = '<i class="fas fa-check"></i> Descargado!';
         setTimeout(function() {
@@ -221,8 +258,8 @@ function generarInforme() {
         }, 2000);
     })
     .catch(function(error) {
-        console.error('Error:', error);
-        alert('Error al generar el informe. Verifica que el servidor este funcionando.');
+        console.error('Error completo:', error);
+        alert('Error al generar el informe: ' + error.message);
         btn.innerHTML = originalText;
         btn.disabled = false;
     });
