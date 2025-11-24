@@ -7,6 +7,16 @@ let dashboardAtterbergData = null;
 let dashboardClasificacionData = null;
 let chartsInitialized = false;
 
+// Almacenar instancias de gráficos para poder destruirlos
+let chartInstances = {
+    waterfallChart: null,
+    barChart: null,
+    lineChart: null,
+    gaugeChart: null,
+    treemapChart: null,
+    pieChart: null
+};
+
 // NO cargar automáticamente - esperar a que se navegue al dashboard
 // Los gráficos se inicializan desde main.js cuando el usuario navega al dashboard
 
@@ -54,6 +64,16 @@ function initializeCharts() {
 }
 
 function renderCharts() {
+    console.log('Renderizando gráficos del dashboard...');
+    
+    // Destruir gráficos existentes primero
+    Object.keys(chartInstances).forEach(key => {
+        if (chartInstances[key] && typeof chartInstances[key].destroy === 'function') {
+            chartInstances[key].destroy();
+            chartInstances[key] = null;
+        }
+    });
+    
     initHumedadEvolutionChart();
     initAtterbergChart();
     initClasificacionChart();
@@ -62,6 +82,7 @@ function renderCharts() {
     initDistribucionChart();
     
     chartsInitialized = true;
+    console.log('Gráficos renderizados correctamente');
 }
 
 // ========================================
@@ -70,10 +91,16 @@ function renderCharts() {
 
 function initHumedadEvolutionChart() {
     const canvas = document.getElementById('waterfallChart');
-    if (!canvas) return;
+    if (!canvas) {
+        console.error('Canvas waterfallChart no encontrado');
+        return;
+    }
     
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+        console.error('No se pudo obtener contexto 2d de waterfallChart');
+        return;
+    }
 
     let labels, humedadValues, temperaturaValues;
     
@@ -87,7 +114,7 @@ function initHumedadEvolutionChart() {
         temperaturaValues = [20, 21, 19, 22, 20.5];
     }
 
-    new Chart(ctx, {
+    chartInstances.waterfallChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
@@ -125,12 +152,7 @@ function initHumedadEvolutionChart() {
             },
             plugins: {
                 title: {
-                    display: true,
-                    text: 'Evolución del Contenido de Humedad en el Tiempo',
-                    font: {
-                        size: 16,
-                        weight: 'bold'
-                    }
+                    display: false
                 },
                 legend: {
                     display: true,
@@ -165,6 +187,8 @@ function initHumedadEvolutionChart() {
             }
         }
     });
+    
+    console.log('Gráfico de Humedad vs Temperatura creado');
 }
 
 // ========================================
@@ -173,10 +197,16 @@ function initHumedadEvolutionChart() {
 
 function initAtterbergChart() {
     const canvas = document.getElementById('barChart');
-    if (!canvas) return;
+    if (!canvas) {
+        console.error('Canvas barChart no encontrado');
+        return;
+    }
     
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+        console.error('No se pudo obtener contexto 2d de barChart');
+        return;
+    }
 
     let ll, lp, ip;
     
@@ -190,7 +220,7 @@ function initAtterbergChart() {
         ip = 20;
     }
 
-    new Chart(ctx, {
+    chartInstances.barChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: ['Límite Líquido (LL)', 'Límite Plástico (LP)', 'Índice de Plasticidad (IP)'],
@@ -216,12 +246,7 @@ function initAtterbergChart() {
             maintainAspectRatio: false,
             plugins: {
                 title: {
-                    display: true,
-                    text: 'Límites de Atterberg',
-                    font: {
-                        size: 16,
-                        weight: 'bold'
-                    }
+                    display: false
                 },
                 legend: {
                     display: false
@@ -248,6 +273,8 @@ function initAtterbergChart() {
             }
         }
     });
+    
+    console.log('Gráfico de Atterberg creado');
 }
 
 // ========================================
@@ -256,10 +283,16 @@ function initAtterbergChart() {
 
 function initClasificacionChart() {
     const canvas = document.getElementById('lineChart');
-    if (!canvas) return;
+    if (!canvas) {
+        console.error('Canvas lineChart no encontrado');
+        return;
+    }
     
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+        console.error('No se pudo obtener contexto 2d de lineChart');
+        return;
+    }
 
     let labels = [];
     let data = [];
@@ -291,7 +324,7 @@ function initClasificacionChart() {
         ];
     }
 
-    new Chart(ctx, {
+    chartInstances.lineChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: labels,
@@ -307,12 +340,7 @@ function initClasificacionChart() {
             maintainAspectRatio: false,
             plugins: {
                 title: {
-                    display: true,
-                    text: 'Distribución de Clasificación AASHTO',
-                    font: {
-                        size: 16,
-                        weight: 'bold'
-                    }
+                    display: false
                 },
                 legend: {
                     display: true,
@@ -332,6 +360,8 @@ function initClasificacionChart() {
             }
         }
     });
+    
+    console.log('Gráfico de Clasificación creado');
 }
 
 // ========================================
@@ -340,7 +370,10 @@ function initClasificacionChart() {
 
 function initResumenGaugeChart() {
     const gaugeDiv = document.getElementById('gaugeChart');
-    if (!gaugeDiv) return;
+    if (!gaugeDiv) {
+        console.error('Div gaugeChart no encontrado');
+        return;
+    }
 
     let value = 0;
     let title = 'Humedad Promedio';
@@ -395,7 +428,8 @@ function initResumenGaugeChart() {
             color: '#1e293b',
             family: 'Segoe UI, sans-serif'
         },
-        margin: { t: 40, b: 20, l: 20, r: 20 }
+        margin: { t: 20, b: 20, l: 20, r: 20 },
+        height: 300
     };
 
     const config = {
@@ -404,6 +438,7 @@ function initResumenGaugeChart() {
     };
 
     Plotly.newPlot(gaugeDiv, data, layout, config);
+    console.log('Gráfico Gauge creado');
 }
 
 // ========================================
@@ -412,7 +447,10 @@ function initResumenGaugeChart() {
 
 function initComparativaChart() {
     const treeDiv = document.getElementById('treemapChart');
-    if (!treeDiv) return;
+    if (!treeDiv) {
+        console.error('Div treemapChart no encontrado');
+        return;
+    }
 
     let labels, parents, values, colors;
     
@@ -451,16 +489,17 @@ function initComparativaChart() {
 
     const layout = {
         title: {
-            text: 'Distribución de Peso Total por Muestra',
+            text: '',
             font: { size: 16, family: 'Segoe UI, sans-serif' }
         },
         paper_bgcolor: 'white',
         font: {
             family: 'Segoe UI, sans-serif',
-            size: 13,
+            size: 12,
             color: '#1e293b'
         },
-        margin: { t: 40, b: 10, l: 10, r: 10 }
+        margin: { t: 10, b: 10, l: 10, r: 10 },
+        height: 300
     };
 
     const config = {
@@ -469,6 +508,7 @@ function initComparativaChart() {
     };
 
     Plotly.newPlot(treeDiv, data, layout, config);
+    console.log('Gráfico TreeMap creado');
 }
 
 // ========================================
@@ -477,10 +517,16 @@ function initComparativaChart() {
 
 function initDistribucionChart() {
     const canvas = document.getElementById('pieChart');
-    if (!canvas) return;
+    if (!canvas) {
+        console.error('Canvas pieChart no encontrado');
+        return;
+    }
     
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+        console.error('No se pudo obtener contexto 2d de pieChart');
+        return;
+    }
 
     let labels, data, colors;
     
@@ -506,7 +552,7 @@ function initDistribucionChart() {
         ];
     }
 
-    new Chart(ctx, {
+    chartInstances.pieChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: labels,
@@ -524,12 +570,7 @@ function initDistribucionChart() {
             maintainAspectRatio: false,
             plugins: {
                 title: {
-                    display: true,
-                    text: 'Porcentaje que Pasa Tamiz #10 por Muestra',
-                    font: {
-                        size: 16,
-                        weight: 'bold'
-                    }
+                    display: false
                 },
                 legend: {
                     display: false
@@ -562,6 +603,8 @@ function initDistribucionChart() {
             }
         }
     });
+    
+    console.log('Gráfico de Distribución (% Pasa) creado');
 }
 
 // Hacer las funciones disponibles globalmente

@@ -126,34 +126,29 @@ function populateProjectsTable() {
     
     if (!tbody) return;
     
-    const proyectos = [
-        { id: 'P-001', nombre: 'Edificio Central', fecha: '20/11/2025', ensayos: 5, estado: 'completado' },
-        { id: 'P-002', nombre: 'Puente Norte', fecha: '19/11/2025', ensayos: 4, estado: 'en-proceso' },
-        { id: 'P-003', nombre: 'Vía Sur', fecha: '18/11/2025', ensayos: 6, estado: 'completado' },
-        { id: 'P-004', nombre: 'Plaza Comercial', fecha: '17/11/2025', ensayos: 3, estado: 'completado' },
-        { id: 'P-005', nombre: 'Residencial Este', fecha: '16/11/2025', ensayos: 4, estado: 'en-proceso' },
-        { id: 'P-006', nombre: 'Torre Empresarial', fecha: '15/11/2025', ensayos: 7, estado: 'completado' },
-        { id: 'P-007', nombre: 'Centro Comercial', fecha: '14/11/2025', ensayos: 5, estado: 'pendiente' }
+    const ensayos = [
+        { id: 'E-001', tipo: 'Contenido de Humedad', fecha: '23/11/2025', muestras: 13, estado: 'completado' },
+        { id: 'E-002', tipo: 'Límites de Atterberg', fecha: '23/11/2025', muestras: 6, estado: 'completado' },
+        { id: 'E-003', tipo: 'Clasificación AASHTO', fecha: '23/11/2025', muestras: 4, estado: 'completado' },
+        { id: 'E-004', tipo: 'Fases del Suelo', fecha: '24/11/2025', muestras: 1, estado: 'en-proceso' }
     ];
     
     tbody.innerHTML = '';
     
-    proyectos.forEach(proyecto => {
+    ensayos.forEach(ensayo => {
         const row = document.createElement('tr');
         
-        const estadoClass = proyecto.estado;
-        const estadoText = proyecto.estado.charAt(0).toUpperCase() + proyecto.estado.slice(1).replace('-', ' ');
+        const estadoClass = ensayo.estado;
+        const estadoText = ensayo.estado.charAt(0).toUpperCase() + ensayo.estado.slice(1).replace('-', ' ');
         
         row.innerHTML = `
-            <td><strong>${proyecto.id}</strong></td>
-            <td>${proyecto.nombre}</td>
-            <td>${proyecto.fecha}</td>
-            <td><strong>${proyecto.ensayos}</strong></td>
+            <td><strong>${ensayo.id}</strong></td>
+            <td>${ensayo.tipo}</td>
+            <td>${ensayo.fecha}</td>
+            <td><strong>${ensayo.muestras}</strong></td>
             <td><span class="status-badge ${estadoClass}">${estadoText}</span></td>
             <td>
                 <button class="btn-action" title="Ver detalles"><i class="fas fa-eye"></i></button>
-                <button class="btn-action" title="Editar"><i class="fas fa-edit"></i></button>
-                <button class="btn-action" title="Eliminar"><i class="fas fa-trash"></i></button>
             </td>
         `;
         

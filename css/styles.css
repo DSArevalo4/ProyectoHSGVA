@@ -544,6 +544,15 @@ body {
     justify-content: center;
 }
 
+.chart-body canvas {
+    max-height: 300px;
+}
+
+.chart-body > div {
+    width: 100% !important;
+    height: 300px !important;
+}
+
 /* ========================================
    TABLES
    ======================================== */

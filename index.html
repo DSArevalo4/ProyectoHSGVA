@@ -94,78 +94,59 @@
             <!-- Dashboard Page -->
             <div id="dashboard-page" class="page active">
                 <div class="page-title">
-                    <h2><i class="fas fa-chart-pie"></i> Dashboard Principal</h2>
-                    <div class="page-actions">
-                        <select class="selector" id="yearSelector">
-                            <option value="2025">2025</option>
-                            <option value="2024">2024</option>
-                            <option value="2023">2023</option>
-                        </select>
-                        <select class="selector" id="weekSelector">
-                            <option value="all">Todas</option>
-                            <option value="1">Semana 1</option>
-                            <option value="2">Semana 2</option>
-                            <option value="3">Semana 3</option>
-                            <option value="4">Semana 4</option>
-                        </select>
-                        <select class="selector" id="empleadoSelector">
-                            <option value="all">Todos</option>
-                            <option value="emp1">Ingeniero 1</option>
-                            <option value="emp2">Ingeniero 2</option>
-                        </select>
-                    </div>
+                    <h2><i class="fas fa-chart-pie"></i> Dashboard - Análisis Geotécnico</h2>
                 </div>
 
                 <!-- KPI Cards -->
                 <div class="kpi-grid">
                     <div class="kpi-card">
                         <div class="kpi-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                            <i class="fas fa-folder-open"></i>
+                            <i class="fas fa-tint"></i>
                         </div>
                         <div class="kpi-content">
-                            <h3>Proyectos Activos</h3>
-                            <div class="kpi-value">12</div>
+                            <h3>Contenido de Humedad</h3>
+                            <div class="kpi-value">13</div>
                             <div class="kpi-change positive">
-                                <i class="fas fa-arrow-up"></i> 3 nuevos
+                                Muestras analizadas
                             </div>
                         </div>
                     </div>
 
                     <div class="kpi-card">
                         <div class="kpi-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                            <i class="fas fa-flask"></i>
+                            <i class="fas fa-chart-line"></i>
                         </div>
                         <div class="kpi-content">
-                            <h3>Ensayos Realizados</h3>
-                            <div class="kpi-value">48</div>
+                            <h3>Límites de Atterberg</h3>
+                            <div class="kpi-value">6</div>
                             <div class="kpi-change positive">
-                                <i class="fas fa-arrow-up"></i> 8 esta semana
+                                Ensayos realizados
                             </div>
                         </div>
                     </div>
 
                     <div class="kpi-card">
                         <div class="kpi-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                            <i class="fas fa-check-circle"></i>
+                            <i class="fas fa-layer-group"></i>
                         </div>
                         <div class="kpi-content">
-                            <h3>Completados</h3>
-                            <div class="kpi-value">45</div>
+                            <h3>Clasificación AASHTO</h3>
+                            <div class="kpi-value">4</div>
                             <div class="kpi-change">
-                                93.75%
+                                Muestras clasificadas
                             </div>
                         </div>
                     </div>
 
                     <div class="kpi-card">
                         <div class="kpi-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                            <i class="fas fa-clock"></i>
+                            <i class="fas fa-cube"></i>
                         </div>
                         <div class="kpi-content">
-                            <h3>Tiempo Promedio</h3>
-                            <div class="kpi-value">2.5h</div>
-                            <div class="kpi-change negative">
-                                <i class="fas fa-arrow-down"></i> -0.5h
+                            <h3>Fases del Suelo</h3>
+                            <div class="kpi-value">100%</div>
+                            <div class="kpi-change positive">
+                                Calculadora activa
                             </div>
                         </div>
                     </div>
@@ -173,78 +154,60 @@
 
                 <!-- Charts Grid -->
                 <div class="charts-grid">
-                    <!-- Chart 1: Gráfico de Cascada -->
+                    <!-- Chart 1: Evolución Humedad vs Temperatura -->
                     <div class="chart-card">
                         <div class="chart-header">
-                            <h3><i class="fas fa-chart-waterfall"></i> Gráfico de Cascada</h3>
-                            <button class="btn-icon-small">
-                                <i class="fas fa-expand"></i>
-                            </button>
+                            <h3><i class="fas fa-temperature-high"></i> Evolución de Humedad en el Tiempo</h3>
                         </div>
                         <div class="chart-body">
-                            <div id="waterfallChart"></div>
+                            <canvas id="waterfallChart"></canvas>
                         </div>
                     </div>
 
-                    <!-- Chart 2: Gráfico de Barras -->
+                    <!-- Chart 2: Límites de Atterberg -->
                     <div class="chart-card">
                         <div class="chart-header">
-                            <h3><i class="fas fa-chart-bar"></i> Ensayos por Tipo</h3>
-                            <button class="btn-icon-small">
-                                <i class="fas fa-expand"></i>
-                            </button>
+                            <h3><i class="fas fa-chart-bar"></i> Límites de Atterberg</h3>
                         </div>
                         <div class="chart-body">
                             <canvas id="barChart"></canvas>
                         </div>
                     </div>
 
-                    <!-- Chart 3: Gráfico de Líneas -->
+                    <!-- Chart 3: Clasificación AASHTO -->
                     <div class="chart-card">
                         <div class="chart-header">
-                            <h3><i class="fas fa-chart-line"></i> Tendencia Mensual</h3>
-                            <button class="btn-icon-small">
-                                <i class="fas fa-expand"></i>
-                            </button>
+                            <h3><i class="fas fa-chart-pie"></i> Distribución de Clasificación AASHTO</h3>
                         </div>
                         <div class="chart-body">
                             <canvas id="lineChart"></canvas>
                         </div>
                     </div>
 
-                    <!-- Chart 4: Gauge -->
+                    <!-- Chart 4: Gauge Humedad Promedio -->
                     <div class="chart-card">
                         <div class="chart-header">
-                            <h3><i class="fas fa-tachometer-alt"></i> Eficiencia</h3>
-                            <button class="btn-icon-small">
-                                <i class="fas fa-expand"></i>
-                            </button>
+                            <h3><i class="fas fa-tachometer-alt"></i> Humedad Promedio</h3>
                         </div>
                         <div class="chart-body">
                             <div id="gaugeChart"></div>
                         </div>
                     </div>
 
-                    <!-- Chart 5: TreeMap -->
+                    <!-- Chart 5: TreeMap Muestras -->
                     <div class="chart-card">
                         <div class="chart-header">
-                            <h3><i class="fas fa-sitemap"></i> Distribución por Categoría</h3>
-                            <button class="btn-icon-small">
-                                <i class="fas fa-expand"></i>
-                            </button>
+                            <h3><i class="fas fa-sitemap"></i> Distribución de Peso por Muestra</h3>
                         </div>
                         <div class="chart-body">
                             <div id="treemapChart"></div>
                         </div>
                     </div>
 
-                    <!-- Chart 6: Estado de Proyectos -->
+                    <!-- Chart 6: % Pasa Tamiz #10 -->
                     <div class="chart-card">
                         <div class="chart-header">
-                            <h3><i class="fas fa-pie-chart"></i> Estado de Proyectos</h3>
-                            <button class="btn-icon-small">
-                                <i class="fas fa-expand"></i>
-                            </button>
+                            <h3><i class="fas fa-filter"></i> % que Pasa Tamiz #10</h3>
                         </div>
                         <div class="chart-body">
                             <canvas id="pieChart"></canvas>
@@ -255,11 +218,10 @@
                 <!-- Recent Projects Table -->
                 <div class="table-card">
                     <div class="table-header">
-                        <h3><i class="fas fa-table"></i> Proyectos Recientes</h3>
+                        <h3><i class="fas fa-table"></i> Ensayos Recientes</h3>
                         <div class="table-actions">
-                            <input type="search" placeholder="Buscar..." class="search-input">
-                            <button class="btn-primary">
-                                <i class="fas fa-download"></i> Exportar
+                            <button class="btn-primary" onclick="location.reload()">
+                                <i class="fas fa-sync-alt"></i> Actualizar
                             </button>
                         </div>
                     </div>
@@ -268,9 +230,9 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Nombre del Proyecto</th>
+                                    <th>Tipo de Ensayo</th>
                                     <th>Fecha</th>
-                                    <th>Ensayos</th>
+                                    <th>Muestras</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
