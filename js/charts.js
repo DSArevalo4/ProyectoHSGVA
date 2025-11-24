@@ -5,10 +5,10 @@
 let dashboardHumedadData = null;
 let dashboardAtterbergData = null;
 let dashboardClasificacionData = null;
+let chartsInitialized = false;
 
-document.addEventListener('DOMContentLoaded', function() {
-    loadAllDashboardData();
-});
+// NO cargar automáticamente - esperar a que se navegue al dashboard
+// Los gráficos se inicializan desde main.js cuando el usuario navega al dashboard
 
 // Cargar datos de todos los módulos
 async function loadAllDashboardData() {
@@ -34,21 +34,34 @@ async function loadAllDashboardData() {
             dashboardClasificacionData = clasificacionResult.data;
         }
 
-        // Inicializar gráficos
-        initializeCharts();
+        // Renderizar gráficos después de cargar los datos
+        renderCharts();
     } catch (error) {
         console.error('Error cargando datos del dashboard:', error);
-        initializeCharts();
+        // Renderizar con datos de ejemplo si falla
+        renderCharts();
     }
 }
 
 function initializeCharts() {
+    // Evitar inicializar múltiples veces
+    if (chartsInitialized) {
+        return;
+    }
+    
+    // Cargar datos primero
+    loadAllDashboardData();
+}
+
+function renderCharts() {
     initHumedadEvolutionChart();
     initAtterbergChart();
     initClasificacionChart();
     initResumenGaugeChart();
     initComparativaChart();
     initDistribucionChart();
+    
+    chartsInitialized = true;
 }
 
 // ========================================

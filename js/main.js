@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeDateTime();
     initializeNavigation();
     populateProjectsTable();
+    
+    // Inicializar gráficos del dashboard ya que es la página activa por defecto
+    if (typeof initializeCharts === 'function') {
+        // Pequeño delay para asegurar que el DOM esté completamente listo
+        setTimeout(initializeCharts, 100);
+    }
 });
 
 // ========================================
@@ -88,7 +94,10 @@ function initializeNavigation() {
 function loadPageContent(pageName) {
     switch(pageName) {
         case 'dashboard':
-            // El dashboard ya está cargado
+            // Inicializar gráficos del dashboard
+            if (typeof initializeCharts === 'function') {
+                initializeCharts();
+            }
             break;
         case 'humedad':
             loadHumedadPage();
